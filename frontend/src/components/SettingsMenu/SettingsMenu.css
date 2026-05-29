@@ -1,0 +1,217 @@
+.settings-menu {
+  position: relative;
+}
+
+.settings-trigger {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: var(--surface-soft);
+  color: var(--text);
+  border-radius: 50%;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow);
+}
+
+.settings-panel {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 320px;
+  height: 380px;
+  min-width: 280px;
+  min-height: 320px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 24px);
+  resize: both;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  z-index: 20;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(79, 70, 229, 0.9) rgba(0, 0, 0, 0.08);
+}
+
+.settings-panel::-webkit-scrollbar {
+  width: 10px;
+}
+
+.settings-panel::-webkit-scrollbar-track {
+  background: var(--surface-soft);
+  border-radius: 999px;
+}
+
+.settings-panel::-webkit-scrollbar-thumb {
+  background: rgba(79, 70, 229, 0.9);
+  border-radius: 999px;
+  border: 2px solid var(--surface);
+}
+
+.settings-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 70, 229, 1);
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+  cursor: grab;
+  user-select: none;
+}
+
+.settings-header.dragging {
+  cursor: grabbing;
+}
+
+.settings-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+.settings-close {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.settings-section {
+  margin-bottom: 20px;
+  min-width: 0;
+}
+
+.settings-section h4 {
+  margin: 0 0 12px;
+  color: var(--text);
+  font-size: 0.98rem;
+}
+
+.settings-toggle,
+.blocked-word-form button,
+.settings-save {
+  border-radius: 14px;
+  border: none;
+  background: var(--primary);
+  color: var(--text-inverse);
+  padding: 11px 16px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.settings-toggle {
+  min-width: 160px;
+}
+
+.blocked-word-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.blocked-word-form input {
+  flex: 1;
+  min-width: 180px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.blocked-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.blocked-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.blocked-item button {
+  border: none;
+  background: transparent;
+  color: var(--danger);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.settings-label {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.settings-label input,
+.settings-label textarea,
+.settings-label input[type='file'] {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.settings-label textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.settings-avatar-preview {
+  display: block;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  margin-top: 14px;
+}
+
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.settings-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.settings-info {
+  margin: 0 0 12px;
+  color: #86efac;
+}
+
+.settings-error {
+  margin: 0 0 12px;
+  color: var(--danger);
+}
+
+.settings-note {
+  margin: 0;
+  color: var(--text-muted);
+}

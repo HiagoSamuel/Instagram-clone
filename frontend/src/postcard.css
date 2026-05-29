@@ -1,0 +1,56 @@
+.post-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 32px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+}
+
+.post-author strong {
+  display: block;
+  color: var(--text-h);
+}
+
+.post-image {
+  background: #f9fafb;
+}
+
+.post-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.post-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px 18px;
+}
+
+.post-actions button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.3rem;
+}
+
+.post-caption {
+  padding: 0 18px 16px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.post-time {
+  padding: 0 18px 18px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}

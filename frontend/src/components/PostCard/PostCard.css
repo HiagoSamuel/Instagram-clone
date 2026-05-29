@@ -1,0 +1,254 @@
+/* ── comment section ── */
+
+.post-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.3rem;
+  padding: 4px 6px;
+  border-radius: 8px;
+  transition: transform 0.15s;
+  line-height: 1;
+}
+
+.post-action-btn:hover {
+  transform: scale(1.18);
+}
+
+.post-likes-count {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-left: auto;
+  align-self: center;
+}
+
+.post-comments-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 0 18px 12px;
+  display: block;
+  transition: color 0.15s;
+}
+
+.post-comments-toggle:hover {
+  color: var(--primary);
+}
+
+.post-comments {
+  border-top: 1px solid var(--border-soft);
+  padding: 14px 18px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: expand-down 0.2s ease;
+}
+
+@keyframes expand-down {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.comments-loading,
+.comments-empty {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
+  padding: 4px 0;
+}
+
+/* list */
+.comments-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comment-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.comment-avatar-link {
+  flex-shrink: 0;
+}
+
+.comment-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.comment-username {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.comment-username:hover {
+  color: var(--primary);
+}
+
+.comment-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.comment-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+  padding: 0 2px;
+  margin-left: auto;
+  color: var(--danger);
+  line-height: 1;
+}
+
+.comment-item:hover .comment-delete-btn {
+  opacity: 1;
+}
+
+.comment-text {
+  margin: 2px 0 0;
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.comment-image {
+  margin-top: 6px;
+  max-width: 200px;
+  max-height: 160px;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+}
+
+/* new comment form */
+.comment-form {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.comment-input-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.comment-input {
+  width: 100%;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 0.88rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.18s;
+}
+
+.comment-input::placeholder {
+  color: var(--text-muted);
+}
+
+.comment-input:focus {
+  border-color: var(--primary);
+}
+
+.comment-img-preview {
+  position: relative;
+  display: inline-block;
+}
+
+.comment-img-preview img {
+  max-width: 120px;
+  max-height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+.comment-img-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.comment-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comment-img-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 2px 4px;
+  border-radius: 6px;
+  transition: transform 0.15s;
+  line-height: 1;
+}
+
+.comment-img-btn:hover {
+  transform: scale(1.15);
+}
+
+.comment-submit-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+
+.comment-submit-btn:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.comment-submit-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.comment-error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--danger);
+}

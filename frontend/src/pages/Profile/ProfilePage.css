@@ -1,0 +1,237 @@
+/* ── existing styles ── */
+.profile-page {
+  padding: 32px;
+  max-width: 1040px;
+  margin: 0 auto;
+  color: #f8fafc;
+}
+
+.profile-card {
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 32px;
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.24);
+  margin-bottom: 28px;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.profile-header h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.profile-bio {
+  margin: 8px 0 0;
+  color: #cbd5e1;
+}
+
+.profile-meta {
+  margin: 10px 0 0;
+  color: #94a3b8;
+}
+
+.profile-actions {
+  margin-top: 24px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.profile-posts h2 {
+  margin: 0 0 18px;
+  font-size: 1.45rem;
+}
+
+.profile-post-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.profile-post-card {
+  background: rgba(15, 23, 42, 0.92);
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.profile-post-card img {
+  width: 100%;
+  display: block;
+}
+
+.profile-post-card p {
+  margin: 14px;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.profile-error {
+  padding: 32px;
+}
+
+/* ── edit modal ── */
+.edit-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: fade-in 0.18s ease;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.edit-modal {
+  background: rgba(15, 23, 42, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 28px;
+  padding: 32px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
+  animation: slide-up 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.edit-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+/* avatar picker */
+.edit-avatar-row {
+  display: flex;
+  justify-content: center;
+}
+
+.edit-avatar-wrap {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.edit-avatar-img {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(79, 70, 229, 0.4);
+  display: block;
+  transition: filter 0.2s;
+}
+
+.edit-avatar-wrap:hover .edit-avatar-img {
+  filter: brightness(0.55);
+}
+
+.edit-avatar-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.edit-avatar-wrap:hover .edit-avatar-overlay {
+  opacity: 1;
+}
+
+/* fields */
+.edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.edit-field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.edit-field input,
+.edit-field textarea {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 12px 14px;
+  color: #f1f5f9;
+  font-size: 0.97rem;
+  transition: border-color 0.18s, background 0.18s;
+  resize: none;
+  outline: none;
+}
+
+.edit-field input::placeholder,
+.edit-field textarea::placeholder {
+  color: #475569;
+}
+
+.edit-field input:focus,
+.edit-field textarea:focus {
+  border-color: rgba(79, 70, 229, 0.7);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.edit-char-count {
+  align-self: flex-end;
+  font-size: 0.75rem;
+  color: #475569;
+  margin-top: 2px;
+}
+
+.edit-error {
+  color: #f87171;
+  font-size: 0.88rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 0;
+}
+
+/* action buttons */
+.edit-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
