@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { apiUrl } from '../../services/api'
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -53,7 +54,7 @@ export default function CreatePostModal({ open, onClose, onPostCreated }) {
     formData.append('caption', caption)
 
     try {
-      const response = await fetch(import.meta.env.VITE_API_URL + '/posts', {
+      const response = await fetch(apiUrl('/posts'), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,

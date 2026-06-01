@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { apiUrl } from '../../services/api'
 import Avatar from '../Avatar/Avatar'
 import './PostCard.css'
 
@@ -8,7 +9,7 @@ async function apiRequest(method, url, body) {
   const token = localStorage.getItem('token')
   const isFormData = body instanceof FormData
 
-  const res = await fetch(`${import.meta.env.VITE_API_URL}${url}`, {
+  const res = await fetch(apiUrl(url), {
     method,
     headers: {
       Authorization: `Bearer ${token}`,
