@@ -27,9 +27,10 @@ async function apiRequest(method, url, body) {
   return res.json()
 }
 
-export default function PostCard({ post, onLikeToggle }) {
+export default function PostCard({ post, onLikeToggle, onPostDelete }) {
   const { user: currentUser } = useAuth()
   const liked = post.liked_by_me
+  const isOwner = currentUser && post.user_id === currentUser.id
 
   // comments state
   const [commentsOpen, setCommentsOpen]   = useState(false)
@@ -105,6 +106,16 @@ export default function PostCard({ post, onLikeToggle }) {
     }
   }
 
+  const handleDeletePost = async () => {
+    if (!window.confirm('Tem certeza que deseja apagar este post?')) return
+    try {
+      await apiRequest('DELETE', `/posts/${post.id}`)
+      if (onPostDelete) onPostDelete(post.id)
+    } catch (err) {
+      alert(err.message)
+    }
+  }
+
   const canDelete = (comment) =>
     currentUser &&
     (comment.user_id === currentUser.id || post.user_id === currentUser.id)
@@ -119,6 +130,16 @@ export default function PostCard({ post, onLikeToggle }) {
             <strong>{post.user.username}</strong>
           </div>
         </Link>
+
+        {isOwner && (
+          <button
+            className="post-delete-btn"
+            onClick={handleDeletePost}
+            title="Apagar post"
+          >
+            🗑
+          </button>
+        )}
       </div>
 
       {/* image */}
