@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -75,17 +75,17 @@ export default function SettingsMenu() {
     dragOffset.current.y = event.clientY - panelPosition.y
   }
 
-  const handleDragEnd = () => {
+  const handleDragEnd = useCallback(() => {
     setDragging(false)
-  }
+  }, [])
 
-  const handleDragMove = (event) => {
-    if (!dragging) return
+  // FIX: handleDragMove definido com useCallback para evitar stale closure
+  const handleDragMove = useCallback((event) => {
     setPanelPosition({
       x: Math.max(12, event.clientX - dragOffset.current.x),
       y: Math.max(12, event.clientY - dragOffset.current.y),
     })
-  }
+  }, [])
 
   useEffect(() => {
     if (!dragging) return
@@ -99,7 +99,7 @@ export default function SettingsMenu() {
       window.removeEventListener('pointerup', handleDragEnd)
       window.removeEventListener('pointerleave', handleDragEnd)
     }
-  }, [dragging])
+  }, [dragging, handleDragMove, handleDragEnd])
 
   const handleSaveProfile = async () => {
     setLoading(true)
@@ -107,11 +107,16 @@ export default function SettingsMenu() {
     setInfo('')
 
     try {
-      const updated = await userService.updateProfile({
-        avatar,
-        username: nickname,
-        bio,
-      })
+      const payload = { bio }
+      // FIX: só envia username se ele foi alterado
+      if (nickname && nickname !== user?.username) {
+        payload.username = nickname
+      }
+      if (avatar) {
+        payload.avatar = avatar
+      }
+
+      const updated = await userService.updateProfile(payload)
       setUser(updated)
       setInfo('Configurações salvas com sucesso.')
       setAvatar(null)
@@ -175,7 +180,7 @@ export default function SettingsMenu() {
                 type="text"
                 value={newWord}
                 onChange={(e) => setNewWord(e.target.value)}
-                placeholder="Adicionar palavra" 
+                placeholder="Adicionar palavra"
               />
               <button type="button" onClick={handleAddBlockedWord}>
                 Adicionar

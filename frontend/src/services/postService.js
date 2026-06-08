@@ -20,9 +20,14 @@ const unlike = async (postId) => {
   return data
 }
 
+// FIX: getUserPosts agora retorna {user, posts} conforme backend corrigido
 const getUserPosts = async (username) => {
   const { data } = await api.get(`/posts/user/${username}`)
   return data
+}
+
+const deletePost = async (postId) => {
+  await api.delete(`/posts/${postId}`)
 }
 
 export const postService = {
@@ -31,4 +36,5 @@ export const postService = {
   like,
   unlike,
   getUserPosts,
+  deletePost,
 }

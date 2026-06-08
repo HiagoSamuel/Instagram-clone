@@ -30,7 +30,10 @@ export default function ProfilePage() {
       setError('')
       try {
         const targetUsername = username || currentUser?.username
-        if (!targetUsername) { setError('Usuário não encontrado.'); return }
+        if (!targetUsername) { 
+          setLoading(false)
+          return 
+        }
         const { user, posts: postList } = await postService.getUserPosts(targetUsername)
         setProfile(user)
         setPosts(postList)
@@ -40,8 +43,11 @@ export default function ProfilePage() {
         setLoading(false)
       }
     }
-    loadProfile()
-  }, [username, currentUser])
+
+    if (username || currentUser?.username) {
+      loadProfile()
+    }
+  }, [username, currentUser?.username]) // 🌟 Corrigido: Escuta apenas o username e não o objeto user inteiro
 
   const isOwnProfile = profile && currentUser && profile.username === currentUser.username
 

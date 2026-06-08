@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { apiUrl } from '../../services/api'
@@ -33,42 +33,28 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
   const isOwner = currentUser && post.user_id === currentUser.id
 
   // comments state
-  const [commentsOpen, setCommentsOpen]     = useState(false)
-  const [comments, setComments]             = useState([])
+  const [commentsOpen, setCommentsOpen]   = useState(false)
+  const [comments, setComments]           = useState([])
   const [commentsLoaded, setCommentsLoaded] = useState(false)
   const [loadingComments, setLoadingComments] = useState(false)
-  // FIX: estado de erro para comentários (antes era silenciado)
-  const [commentsError, setCommentsError]   = useState('')
 
   // new comment form
-  const [newText, setNewText]           = useState('')
-  const [newImage, setNewImage]         = useState(null)
+  const [newText, setNewText]       = useState('')
+  const [newImage, setNewImage]     = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
-  const [submitting, setSubmitting]     = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [commentError, setCommentError] = useState('')
   const imgInputRef = useRef(null)
-
-  // FIX: revoga URL de preview ao desmontar ou trocar imagem (evita memory leak)
-  useEffect(() => {
-    return () => {
-      if (imagePreview) {
-        URL.revokeObjectURL(imagePreview)
-      }
-    }
-  }, [imagePreview])
 
   const toggleComments = async () => {
     if (!commentsOpen && !commentsLoaded) {
       setLoadingComments(true)
-      setCommentsError('')
       try {
         const data = await apiRequest('GET', `/posts/${post.id}/comments`)
         setComments(data)
         setCommentsLoaded(true)
-      } catch (err) {
-        // FIX: exibe erro ao usuário em vez de silenciar
-        setCommentsError('Não foi possível carregar os comentários.')
-        console.error(err)
+      } catch {
+        // silently fail — comments just won't show
       } finally {
         setLoadingComments(false)
       }
@@ -79,14 +65,11 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
   const handleImageChange = (e) => {
     const file = e.target.files[0]
     if (!file) return
-    // FIX: revoga URL anterior antes de criar nova
-    if (imagePreview) URL.revokeObjectURL(imagePreview)
     setNewImage(file)
     setImagePreview(URL.createObjectURL(file))
   }
 
   const clearImage = () => {
-    if (imagePreview) URL.revokeObjectURL(imagePreview)
     setNewImage(null)
     setImagePreview(null)
     if (imgInputRef.current) imgInputRef.current.value = ''
@@ -184,7 +167,7 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
 
       {/* comments toggle label */}
       <button className="post-comments-toggle" onClick={toggleComments}>
-        {commentsOpen ? 'Ocultar comentários' : 'Ver comentários'}
+        {commentsOpen ? 'Ocultar comentários' : `Ver comentários`}
       </button>
 
       {/* comments section */}
@@ -192,10 +175,7 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
         <div className="post-comments">
           {loadingComments && <p className="comments-loading">Carregando...</p>}
 
-          {/* FIX: exibe erro de carregamento de comentários */}
-          {commentsError && <p className="comment-error">{commentsError}</p>}
-
-          {!loadingComments && !commentsError && comments.length === 0 && (
+          {!loadingComments && comments.length === 0 && (
             <p className="comments-empty">Nenhum comentário ainda. Seja o primeiro!</p>
           )}
 

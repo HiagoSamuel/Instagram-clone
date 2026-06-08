@@ -37,6 +37,13 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // FIX: validação de senha mínima no frontend
+    if (form.password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres.')
+      return
+    }
+
     setLoading(true)
     setError('')
 
@@ -82,6 +89,7 @@ export default function RegisterPage() {
               placeholder="Email"
               value={form.email}
               onChange={handleChange}
+              required
             />
             <input
               type="text"
@@ -96,13 +104,16 @@ export default function RegisterPage() {
               placeholder="Nome de usuário"
               value={form.username}
               onChange={handleChange}
+              required
             />
             <input
               type="password"
               name="password"
-              placeholder="Senha"
+              placeholder="Senha (mínimo 6 caracteres)"
               value={form.password}
               onChange={handleChange}
+              minLength={6}
+              required
             />
             <input
               type="file"

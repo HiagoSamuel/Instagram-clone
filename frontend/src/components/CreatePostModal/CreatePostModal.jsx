@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { apiUrl } from '../../services/api'
+import './CreatePostModal.css'
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -29,7 +30,11 @@ export default function CreatePostModal({ open, onClose, onPostCreated }) {
     setError('')
   }
 
+  // FIX: reseta todo o estado ao fechar
   const handleClose = () => {
+    setImage(null)
+    setCaption('')
+    setError('')
     onClose()
   }
 
@@ -69,7 +74,7 @@ export default function CreatePostModal({ open, onClose, onPostCreated }) {
 
       const post = await response.json()
       onPostCreated(post)
-      onClose()
+      handleClose()
     } catch (err) {
       setError(err.message)
     } finally {

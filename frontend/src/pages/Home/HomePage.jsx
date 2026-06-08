@@ -52,13 +52,19 @@ export default function HomePage() {
     }
   }
 
+  // FIX: createPost agora retorna post com user/likes_count/liked_by_me
   const handlePostCreated = (newPost) => {
     setPosts((current) => [newPost, ...current])
   }
 
+  // FIX: onPostDelete agora remove o post da lista sem precisar recarregar
+  const handlePostDelete = (postId) => {
+    setPosts((current) => current.filter((p) => p.id !== postId))
+  }
+
   return (
     <div className="home-page">
-      <header className="home-header">
+      <header className="home-header" style={{ position: 'relative', zIndex: 100 }}>
         <div className="home-header-actions">
           <SettingsMenu />
         </div>
@@ -66,11 +72,17 @@ export default function HomePage() {
           <h1>Bem-vindo, {user?.username || 'usuário'}</h1>
           <p>Feed dos seus amigos e suas fotos.</p>
         </div>
-        <div className="home-actions">
+
+        <div className="home-actions" style={{ position: 'relative', zIndex: 101 }}>
           <Link to={`/profile/${user?.username}`} className="button button-secondary">
             Meu perfil
           </Link>
-          <button onClick={() => setIsModalOpen(true)} className="button button-primary">
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="button button-primary"
+            style={{ cursor: 'pointer' }}
+          >
             Novo post
           </button>
           <button onClick={logout} className="button button-secondary">
@@ -88,7 +100,12 @@ export default function HomePage() {
       ) : (
         <div className="feed-list">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} onLikeToggle={handleLikeToggle} />
+            <PostCard
+              key={post.id}
+              post={post}
+              onLikeToggle={handleLikeToggle}
+              onPostDelete={handlePostDelete}
+            />
           ))}
         </div>
       )}

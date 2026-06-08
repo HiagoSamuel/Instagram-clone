@@ -9,6 +9,11 @@ exports.register = async (req, res) => {
     return res.status(400).json({ error: 'Email, usuário e senha são obrigatórios.' })
   }
 
+  // FIX: validação mínima de senha
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'A senha deve ter pelo menos 6 caracteres.' })
+  }
+
   const { data: existingByUsername, error: usernameError } = await supabase
     .from('users')
     .select('id')
@@ -49,8 +54,6 @@ exports.register = async (req, res) => {
 
   let avatar_url = user.avatar_url
   const file = req.file
-  console.log('[authController.register] SUPABASE_URL=', process.env.SUPABASE_URL)
-  console.log('[authController.register] received file =', file ? { originalname: file.originalname, mimetype: file.mimetype, size: file.size } : null)
 
   if (file) {
     const fileName = `avatars/${user.id}/${Date.now()}-${file.originalname}`
@@ -61,11 +64,9 @@ exports.register = async (req, res) => {
         upsert: false,
       })
 
+    // FIX: checagem única de uploadError (removida checagem duplicada)
     if (uploadError) {
       console.error('[authController.register] uploadError:', uploadError)
-    }
-
-    if (uploadError) {
       await supabase.from('users').delete().eq('id', user.id)
       return res.status(500).json({ error: 'Erro ao enviar o avatar para o storage.' })
     }
@@ -74,11 +75,9 @@ exports.register = async (req, res) => {
       .from('avatars')
       .getPublicUrl(fileName)
 
+    // FIX: checagem única de publicError (removida checagem duplicada)
     if (publicError) {
       console.error('[authController.register] publicError:', publicError)
-    }
-
-    if (publicError) {
       await supabase.from('users').delete().eq('id', user.id)
       return res.status(500).json({ error: 'Erro ao gerar URL pública do avatar.' })
     }
@@ -161,8 +160,6 @@ exports.updateMe = async (req, res) => {
   const { userId } = req.user
   const { username, bio } = req.body
   const file = req.file
-  console.log('[authController.updateMe] userId=', userId)
-  console.log('[authController.updateMe] received file =', file ? { originalname: file.originalname, mimetype: file.mimetype, size: file.size } : null)
   const updates = {}
 
   if (username) {
@@ -196,11 +193,9 @@ exports.updateMe = async (req, res) => {
         upsert: false,
       })
 
+    // FIX: checagem única de uploadError (removida checagem duplicada)
     if (uploadError) {
       console.error('[authController.updateMe] uploadError:', uploadError)
-    }
-
-    if (uploadError) {
       return res.status(500).json({ error: 'Erro ao enviar o avatar para o storage.' })
     }
 
@@ -208,11 +203,9 @@ exports.updateMe = async (req, res) => {
       .from('avatars')
       .getPublicUrl(fileName)
 
+    // FIX: checagem única de publicError (removida checagem duplicada)
     if (publicError) {
       console.error('[authController.updateMe] publicError:', publicError)
-    }
-
-    if (publicError) {
       return res.status(500).json({ error: 'Erro ao gerar URL pública do avatar.' })
     }
 
