@@ -1,4 +1,4 @@
-.modal-overlay {
+.create-post-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -11,7 +11,7 @@
   z-index: 9999; /* Garante que fica por cima de TUDO na HomePage */
 }
 
-.modal-content {
+.create-post-modal-content {
   background-color: #121212; /* Ajuste para bater com o tema escuro do seu app */
   color: #ffffff;
   padding: 24px;
@@ -22,20 +22,19 @@
   border: 1px solid #262626;
 }
 
-.modal-header {
+.create-post-modal-header {
   display: flex;
-  justify-content: border-between;
   align-items: center;
   margin-bottom: 20px;
   justify-content: space-between;
 }
 
-.modal-header h2 {
+.create-post-modal-header h2 {
   margin: 0;
   font-size: 1.5rem;
 }
 
-.modal-close {
+.create-post-modal-close {
   background: none;
   border: none;
   color: #8e8e8e;
@@ -44,24 +43,24 @@
   transition: color 0.2s;
 }
 
-.modal-close:hover {
+.create-post-modal-close:hover {
   color: #ffffff;
 }
 
-.modal-form {
+.create-post-modal-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.modal-form label {
+.create-post-modal-form label {
   display: flex;
   flex-direction: column;
   gap: 8px;
   font-weight: 500;
 }
 
-.modal-form input[type="file"] {
+.create-post-modal-form input[type="file"] {
   background-color: #1a1a1a;
   padding: 10px;
   border-radius: 6px;
@@ -69,7 +68,7 @@
   cursor: pointer;
 }
 
-.modal-form textarea {
+.create-post-modal-form textarea {
   background-color: #1a1a1a;
   color: white;
   border: 1px solid #363636;
@@ -79,18 +78,18 @@
   min-height: 100px;
 }
 
-.modal-form textarea:focus {
+.create-post-modal-form textarea:focus {
   outline: none;
   border-color: #0095f6;
 }
 
-.modal-error {
+.create-post-modal-error {
   color: #ed4956;
   font-size: 0.9rem;
   margin: 0;
 }
 
-.modal-form button[type="submit"] {
+.create-post-modal-form button[type="submit"] {
   background-color: #0095f6;
   color: white;
   border: none;
@@ -101,11 +100,11 @@
   transition: background-color 0.2s;
 }
 
-.modal-form button[type="submit"]:hover:not(:disabled) {
+.create-post-modal-form button[type="submit"]:hover:not(:disabled) {
   background-color: #1877f2;
 }
 
-.modal-form button[type="submit"]:disabled {
+.create-post-modal-form button[type="submit"]:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

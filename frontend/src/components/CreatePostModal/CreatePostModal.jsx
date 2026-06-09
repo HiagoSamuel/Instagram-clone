@@ -83,16 +83,16 @@ export default function CreatePostModal({ open, onClose, onPostCreated }) {
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <header className="modal-header">
+    <div className="create-post-modal-overlay">
+      <div className="create-post-modal-content">
+        <header className="create-post-modal-header">
           <h2>Novo post</h2>
-          <button type="button" onClick={handleClose} className="modal-close">
+          <button type="button" onClick={handleClose} className="create-post-modal-close">
             ✕
           </button>
         </header>
 
-        <form onSubmit={handleSubmit} className="modal-form">
+        <form onSubmit={handleSubmit} className="create-post-modal-form">
           <label>
             Imagem
             <input type="file" accept="image/*" onChange={handleFileChange} />
@@ -107,7 +107,7 @@ export default function CreatePostModal({ open, onClose, onPostCreated }) {
             />
           </label>
 
-          {error && <p className="modal-error">{error}</p>}
+          {error && <p className="create-post-modal-error">{error}</p>}
 
           <button type="submit" disabled={loading}>
             {loading ? 'Publicando...' : 'Compartilhar'}
