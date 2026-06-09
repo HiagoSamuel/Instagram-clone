@@ -96,7 +96,7 @@ export default function CreatePostModal({ open, onClose, onPostCreated }) {
 
         <form onSubmit={handleSubmit} className="create-post-modal-form">
           <label>
-            Adicionar um arquivo (opcional)
+            Adicionar imagem (opcional)
             <input type="file" accept="image/*" onChange={handleFileChange} />
           </label>
 

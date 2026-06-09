@@ -61,7 +61,7 @@ exports.createPost = async (req, res) => {
     return res.status(400).json({ error: 'Escreva uma legenda ou envie uma imagem.' })
   }
 
-  let imageUrl = null
+  let imageUrl = ''
 
   if (file) {
     const filename = `${userId}-${Date.now()}.${file.mimetype.split('/')[1]}`
