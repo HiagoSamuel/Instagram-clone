@@ -6,6 +6,8 @@ import { userService } from '../../services/userService'
 import Avatar from '../../components/Avatar/Avatar'
 import './ProfilePage.css'
 
+const TEXT_ONLY_IMAGE_URL = 'text-only-post'
+
 export default function ProfilePage() {
   const { user: currentUser, setUser } = useAuth()
   const { username } = useParams()
@@ -124,15 +126,18 @@ export default function ProfilePage() {
           <p>Este usuário não postou nada.</p>
         ) : (
           <div className="profile-post-grid">
-            {posts.map((post) => (
+            {posts.map((post) => {
+              const hasImage = post.image_url && post.image_url !== TEXT_ONLY_IMAGE_URL
+              return (
               <article
                 key={post.id}
-                className={`profile-post-card${post.image_url ? '' : ' profile-post-card-text-only'}`}
+                className={`profile-post-card${hasImage ? '' : ' profile-post-card-text-only'}`}
               >
-                {post.image_url && <img src={post.image_url} alt={post.caption || 'Post'} />}
+                {hasImage && <img src={post.image_url} alt={post.caption || 'Post'} />}
                 {post.caption && <p>{post.caption}</p>}
               </article>
-            ))}
+              )
+            })}
           </div>
         )}
       </section>

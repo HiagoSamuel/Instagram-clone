@@ -5,6 +5,8 @@ import { apiUrl } from '../../services/api'
 import Avatar from '../Avatar/Avatar'
 import './PostCard.css'
 
+const TEXT_ONLY_IMAGE_URL = 'text-only-post'
+
 async function apiRequest(method, url, body) {
   const token = localStorage.getItem('token')
   const isFormData = body instanceof FormData
@@ -31,6 +33,7 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
   const { user: currentUser } = useAuth()
   const liked = post.liked_by_me
   const isOwner = currentUser && post.user_id === currentUser.id
+  const hasImage = post.image_url && post.image_url !== TEXT_ONLY_IMAGE_URL
 
   // comments state
   const [commentsOpen, setCommentsOpen]     = useState(false)
@@ -172,7 +175,7 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
       </div>
 
       {/* image */}
-      {post.image_url && (
+      {hasImage && (
         <div className="post-image">
           <img src={post.image_url} alt={post.caption || 'Foto do post'} />
         </div>

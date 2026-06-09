@@ -1,5 +1,7 @@
 const supabase = require('../services/supabase')
 
+const TEXT_ONLY_IMAGE_URL = 'text-only-post'
+
 exports.getFeed = async (req, res) => {
   const { userId } = req.user
 
@@ -61,7 +63,7 @@ exports.createPost = async (req, res) => {
     return res.status(400).json({ error: 'Escreva uma legenda ou envie uma imagem.' })
   }
 
-  let imageUrl = ''
+  let imageUrl = TEXT_ONLY_IMAGE_URL
 
   if (file) {
     const filename = `${userId}-${Date.now()}.${file.mimetype.split('/')[1]}`
@@ -84,7 +86,12 @@ exports.createPost = async (req, res) => {
     .single()
 
   if (error) {
-    return res.status(500).json({ error: 'Erro ao criar post' })
+    console.error('Erro ao criar post no Supabase:', error)
+    return res.status(500).json({
+      error: error.message || 'Erro ao criar post',
+      code: error.code,
+      details: error.details,
+    })
   }
 
   // FIX: busca dados do usuário para incluir no retorno (necessário para o PostCard)
