@@ -1,5 +1,41 @@
 /* ── comment section ── */
 
+.post-delete-btn {
+  width: 36px;
+  height: 36px;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--primary);
+  cursor: pointer;
+  transition: background-color 0.18s, color 0.18s, transform 0.18s;
+}
+
+.post-delete-btn:hover {
+  background: rgba(124, 58, 237, 0.12);
+  color: var(--primary-hover);
+  transform: scale(1.06);
+}
+
+.post-delete-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.post-delete-icon {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .post-action-btn {
   background: none;
   border: none;

@@ -153,8 +153,20 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
             className="post-delete-btn"
             onClick={handleDeletePost}
             title="Apagar post"
+            aria-label="Apagar post"
           >
-            🗑
+            <svg
+              className="post-delete-icon"
+              viewBox="0 0 64 64"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M22 16V10C22 7.8 23.8 6 26 6H38C40.2 6 42 7.8 42 10V16" />
+              <path d="M14 16H50" />
+              <path d="M18 16L21 56H43L46 16" />
+              <path d="M28 26V48" />
+              <path d="M36 26V48" />
+            </svg>
           </button>
         )}
       </div>
