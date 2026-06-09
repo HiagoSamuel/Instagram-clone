@@ -160,9 +160,11 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
       </div>
 
       {/* image */}
-      <div className="post-image">
-        <img src={post.image_url} alt={post.caption || 'Foto do post'} />
-      </div>
+      {post.image_url && (
+        <div className="post-image">
+          <img src={post.image_url} alt={post.caption || 'Foto do post'} />
+        </div>
+      )}
 
       {/* actions */}
       <div className="post-actions">

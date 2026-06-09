@@ -54,28 +54,32 @@ exports.getFeed = async (req, res) => {
 
 exports.createPost = async (req, res) => {
   const { userId } = req.user
-  const { caption } = req.body
+  const caption = (req.body.caption || '').trim()
   const file = req.file
 
-  if (!file) {
-    return res.status(400).json({ error: 'Imagem obrigatória' })
+  if (!file && !caption) {
+    return res.status(400).json({ error: 'Escreva uma legenda ou envie uma imagem.' })
   }
 
-  const filename = `${userId}-${Date.now()}.${file.mimetype.split('/')[1]}`
-  const { error: uploadError } = await supabase.storage
-    .from('posts')
-    .upload(filename, file.buffer, { contentType: file.mimetype })
+  let imageUrl = null
 
-  if (uploadError) {
-    return res.status(500).json({ error: 'Erro ao fazer upload da imagem' })
+  if (file) {
+    const filename = `${userId}-${Date.now()}.${file.mimetype.split('/')[1]}`
+    const { error: uploadError } = await supabase.storage
+      .from('posts')
+      .upload(filename, file.buffer, { contentType: file.mimetype })
+
+    if (uploadError) {
+      return res.status(500).json({ error: 'Erro ao fazer upload da imagem' })
+    }
+
+    const { data: urlData } = supabase.storage.from('posts').getPublicUrl(filename)
+    imageUrl = urlData.publicUrl
   }
-
-  const { data: urlData } = supabase.storage.from('posts').getPublicUrl(filename)
-  const imageUrl = urlData.publicUrl
 
   const { data: post, error } = await supabase
     .from('posts')
-    .insert({ user_id: userId, image_url: imageUrl, caption })
+    .insert({ user_id: userId, image_url: imageUrl, caption: caption || null })
     .select()
     .single()
 

@@ -125,9 +125,12 @@ export default function ProfilePage() {
         ) : (
           <div className="profile-post-grid">
             {posts.map((post) => (
-              <article key={post.id} className="profile-post-card">
-                <img src={post.image_url} alt={post.caption || 'Post'} />
-                <p>{post.caption}</p>
+              <article
+                key={post.id}
+                className={`profile-post-card${post.image_url ? '' : ' profile-post-card-text-only'}`}
+              >
+                {post.image_url && <img src={post.image_url} alt={post.caption || 'Post'} />}
+                {post.caption && <p>{post.caption}</p>}
               </article>
             ))}
           </div>

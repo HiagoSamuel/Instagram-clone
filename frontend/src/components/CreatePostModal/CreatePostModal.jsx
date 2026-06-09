@@ -40,8 +40,8 @@ export default function CreatePostModal({ open, onClose, onPostCreated }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!image) {
-      setError('Selecione uma imagem para postar.')
+    if (!image && !caption.trim()) {
+      setError('Escreva uma legenda ou adicione uma imagem para postar.')
       return
     }
     setLoading(true)
@@ -55,8 +55,10 @@ export default function CreatePostModal({ open, onClose, onPostCreated }) {
     }
 
     const formData = new FormData()
-    formData.append('image', image)
-    formData.append('caption', caption)
+    if (image) {
+      formData.append('image', image)
+    }
+    formData.append('caption', caption.trim())
 
     try {
       const response = await fetch(apiUrl('/posts'), {
@@ -94,7 +96,7 @@ export default function CreatePostModal({ open, onClose, onPostCreated }) {
 
         <form onSubmit={handleSubmit} className="create-post-modal-form">
           <label>
-            Imagem
+            Adicionar imagem (opcional)
             <input type="file" accept="image/*" onChange={handleFileChange} />
           </label>
 
@@ -110,7 +112,7 @@ export default function CreatePostModal({ open, onClose, onPostCreated }) {
           {error && <p className="create-post-modal-error">{error}</p>}
 
           <button type="submit" disabled={loading}>
-            {loading ? 'Publicando...' : 'Compartilhar'}
+            {loading ? 'Postando...' : 'Postar'}
           </button>
         </form>
       </div>
