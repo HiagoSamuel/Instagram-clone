@@ -5,6 +5,7 @@ import { postService } from '../../services/postService'
 import PostCard from '../../components/PostCard/PostCard'
 import CreatePostModal from '../../components/CreatePostModal/CreatePostModal'
 import SettingsMenu from '../../components/SettingsMenu/SettingsMenu'
+import api from '../../services/api'
 
 export default function HomePage() {
   const { user, logout } = useAuth()
@@ -12,6 +13,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [pendingCount, setPendingCount] = useState(0)
 
   useEffect(() => {
     const loadFeed = async () => {
@@ -27,6 +29,10 @@ export default function HomePage() {
     }
 
     loadFeed()
+
+    api.get('/friendships/pending')
+      .then(({ data }) => setPendingCount(data.length))
+      .catch(() => setPendingCount(0))
   }, [])
 
   const handleLikeToggle = async (postId, liked) => {
@@ -76,6 +82,16 @@ export default function HomePage() {
         <div className="home-actions" style={{ position: 'relative', zIndex: 101 }}>
           <Link to={`/profile/${user?.username}`} className="button button-secondary">
             Meu perfil
+          </Link>
+          <Link to="/search" className="button button-secondary">
+            Buscar
+          </Link>
+          <Link to="/requests" className="button button-secondary nav-button-with-badge">
+            Solicitacoes
+            {pendingCount > 0 && <span className="nav-badge">{pendingCount}</span>}
+          </Link>
+          <Link to="/conversations" className="button button-secondary">
+            Mensagens
           </Link>
           <button
             type="button"

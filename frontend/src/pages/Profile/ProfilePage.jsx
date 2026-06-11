@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { postService } from '../../services/postService'
 import { userService } from '../../services/userService'
 import Avatar from '../../components/Avatar/Avatar'
+import FriendButton from '../../components/FriendButton'
 import './ProfilePage.css'
 
 const TEXT_ONLY_IMAGE_URL = 'text-only-post'
@@ -15,6 +16,7 @@ export default function ProfilePage() {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [friendshipStatus, setFriendshipStatus] = useState('none')
 
   // modal state
   const [editOpen, setEditOpen] = useState(false)
@@ -116,6 +118,16 @@ export default function ProfilePage() {
             <button className="button button-primary" onClick={openEdit}>
               Editar meu perfil
             </button>
+          )}
+          {!isOwnProfile && profile?.id && (
+            <>
+              <FriendButton userId={profile.id} onStatusChange={setFriendshipStatus} />
+              {friendshipStatus === 'accepted' && (
+                <Link to={`/chat/${profile.id}`} className="button button-primary">
+                  Enviar mensagem
+                </Link>
+              )}
+            </>
           )}
         </div>
       </div>

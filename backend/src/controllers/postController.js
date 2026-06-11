@@ -1,9 +1,29 @@
 const supabase = require('../services/supabase')
+const { isMissingFriendshipsTable } = require('./friendshipController')
 
 const TEXT_ONLY_IMAGE_URL = 'text-only-post'
 
 exports.getFeed = async (req, res) => {
   const { userId } = req.user
+
+  const { data: friendships, error: friendshipsError } = await supabase
+    .from('friendships')
+    .select('requester_id, addressee_id')
+    .eq('status', 'accepted')
+    .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
+
+  if (friendshipsError) {
+    if (!isMissingFriendshipsTable(friendshipsError)) {
+      return res.status(500).json({ error: 'Erro ao buscar amigos' })
+    }
+  }
+
+  const visibleUserIds = [
+    userId,
+    ...(friendships || []).map((friendship) =>
+      friendship.requester_id === userId ? friendship.addressee_id : friendship.requester_id
+    ),
+  ]
 
   // FIX: busca posts com contagem de likes e status de curtida em queries otimizadas
   const { data: posts, error } = await supabase
@@ -20,6 +40,7 @@ exports.getFeed = async (req, res) => {
         avatar_url
       )
     `)
+    .in('user_id', visibleUserIds)
     .order('created_at', { ascending: false })
 
   if (error) {
