@@ -58,6 +58,64 @@
   align-self: center;
 }
 
+.post-attachment {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 18px 14px;
+  padding: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.18s, transform 0.18s;
+}
+
+.post-attachment:hover {
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.post-attachment-icon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  background: var(--primary);
+  color: var(--text-inverse);
+}
+
+.post-attachment-icon svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.post-attachment-text {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.post-attachment-text strong,
+.post-attachment-text small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-attachment-text small {
+  color: var(--text-muted);
+}
+
 .post-comments-toggle {
   background: none;
   border: none;

@@ -20,7 +20,9 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    if (file.fieldname === 'image' && file.mimetype.startsWith('image/')) {
+      cb(null, true)
+    } else if (file.fieldname === 'attachment') {
       cb(null, true)
     } else {
       cb(new Error('Apenas imagens são permitidas.'))
@@ -32,7 +34,10 @@ const router = express.Router()
 
 // posts
 router.get('/feed',           authMiddleware,                        getFeed)
-router.post('/',              authMiddleware, upload.single('image'), createPost)
+router.post('/',              authMiddleware, upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'attachment', maxCount: 1 },
+]), createPost)
 router.get('/user/:username', authMiddleware,                        getUserPosts)
 router.post('/:id/like',      authMiddleware,                        likePost)
 router.delete('/:id/like',    authMiddleware,                        unlikePost)

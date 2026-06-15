@@ -1,9 +1,67 @@
 const supabase = require('../services/supabase')
+const path = require('path')
 const { areFriends, isMissingFriendshipsTable } = require('./friendshipController')
 
 const TEXT_ONLY_IMAGE_URL = 'text-only-post'
 const DEFAULT_FEED_LIMIT = 20
 const MAX_FEED_LIMIT = 50
+const POST_SELECT_WITH_FILES = `
+      id,
+      image_url,
+      caption,
+      file_url,
+      file_name,
+      file_type,
+      file_size,
+      created_at,
+      user_id,
+      users!posts_user_id_fkey (
+        id,
+        username,
+        avatar_url
+      )
+    `
+const POST_SELECT_BASE = `
+      id,
+      image_url,
+      caption,
+      created_at,
+      user_id,
+      users!posts_user_id_fkey (
+        id,
+        username,
+        avatar_url
+      )
+    `
+
+function isMissingPostFileColumns(error) {
+  return error?.code === 'PGRST204' || /file_(url|name|type|size)/i.test(error?.message || '')
+}
+
+function safeFileName(name) {
+  const ext = path.extname(name || '').toLowerCase()
+  const base = path.basename(name || 'arquivo', ext)
+  const cleanBase = base
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9-_]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80)
+
+  return `${cleanBase || 'arquivo'}${ext}`
+}
+
+async function uploadPostFile(userId, file, folder) {
+  const filename = `${folder}/${userId}/${Date.now()}-${safeFileName(file.originalname)}`
+  const { error: uploadError } = await supabase.storage
+    .from('posts')
+    .upload(filename, file.buffer, { contentType: file.mimetype })
+
+  if (uploadError) throw uploadError
+
+  const { data: urlData } = supabase.storage.from('posts').getPublicUrl(filename)
+  return urlData.publicUrl
+}
 
 function parsePagination(query) {
   const rawLimit = Number.parseInt(query.limit, 10)
@@ -40,23 +98,23 @@ exports.getFeed = async (req, res) => {
   ]
 
   // FIX: busca posts com contagem de likes e status de curtida em queries otimizadas
-  const { data: posts, error } = await supabase
+  let { data: posts, error } = await supabase
     .from('posts')
-    .select(`
-      id,
-      image_url,
-      caption,
-      created_at,
-      user_id,
-      users!posts_user_id_fkey (
-        id,
-        username,
-        avatar_url
-      )
-    `)
+    .select(POST_SELECT_WITH_FILES)
     .in('user_id', visibleUserIds)
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
+
+  if (error && isMissingPostFileColumns(error)) {
+    const fallback = await supabase
+      .from('posts')
+      .select(POST_SELECT_BASE)
+      .in('user_id', visibleUserIds)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
+    posts = fallback.data
+    error = fallback.error
+  }
 
   if (error) {
     return res.status(500).json({ error: 'Erro ao buscar feed' })
@@ -95,36 +153,55 @@ exports.getFeed = async (req, res) => {
 exports.createPost = async (req, res) => {
   const { userId } = req.user
   const caption = (req.body.caption || '').trim()
-  const file = req.file
+  const imageFile = req.files?.image?.[0] || null
+  const attachmentFile = req.files?.attachment?.[0] || null
 
-  if (!file && !caption) {
-    return res.status(400).json({ error: 'Escreva uma legenda ou envie uma imagem.' })
+  if (!imageFile && !attachmentFile && !caption) {
+    return res.status(400).json({ error: 'Escreva uma legenda, envie uma imagem ou anexe um arquivo.' })
   }
 
   let imageUrl = TEXT_ONLY_IMAGE_URL
+  let attachment = null
 
-  if (file) {
-    const filename = `${userId}-${Date.now()}.${file.mimetype.split('/')[1]}`
-    const { error: uploadError } = await supabase.storage
-      .from('posts')
-      .upload(filename, file.buffer, { contentType: file.mimetype })
-
-    if (uploadError) {
+  if (imageFile) {
+    try {
+      imageUrl = await uploadPostFile(userId, imageFile, 'images')
+    } catch (uploadError) {
       return res.status(500).json({ error: 'Erro ao fazer upload da imagem' })
     }
+  }
 
-    const { data: urlData } = supabase.storage.from('posts').getPublicUrl(filename)
-    imageUrl = urlData.publicUrl
+  if (attachmentFile) {
+    try {
+      attachment = {
+        file_url: await uploadPostFile(userId, attachmentFile, 'attachments'),
+        file_name: attachmentFile.originalname,
+        file_type: attachmentFile.mimetype,
+        file_size: attachmentFile.size,
+      }
+    } catch (uploadError) {
+      return res.status(500).json({ error: 'Erro ao fazer upload do arquivo' })
+    }
   }
 
   const { data: post, error } = await supabase
     .from('posts')
-    .insert({ user_id: userId, image_url: imageUrl, caption: caption || null })
+    .insert({
+      user_id: userId,
+      image_url: imageUrl,
+      caption: caption || null,
+      ...(attachment || {}),
+    })
     .select()
     .single()
 
   if (error) {
     console.error('Erro ao criar post no Supabase:', error)
+    if (attachment && isMissingPostFileColumns(error)) {
+      return res.status(500).json({
+        error: 'O banco ainda nao tem as colunas de arquivo. Rode backend/supabase-post-files.sql no Supabase.',
+      })
+    }
     return res.status(500).json({
       error: error.message || 'Erro ao criar post',
       code: error.code,
@@ -183,11 +260,21 @@ exports.getUserPosts = async (req, res) => {
     })
   }
 
-  const { data: posts, error } = await supabase
+  let { data: posts, error } = await supabase
     .from('posts')
-    .select('id, image_url, caption, created_at, user_id')
+    .select('id, image_url, caption, file_url, file_name, file_type, file_size, created_at, user_id')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
+
+  if (error && isMissingPostFileColumns(error)) {
+    const fallback = await supabase
+      .from('posts')
+      .select('id, image_url, caption, created_at, user_id')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+    posts = fallback.data
+    error = fallback.error
+  }
 
   if (error) {
     return res.status(500).json({ error: 'Erro ao buscar posts' })
@@ -259,7 +346,7 @@ exports.deletePost = async (req, res) => {
 
   const { data: post, error: fetchError } = await supabase
     .from('posts')
-    .select('id, user_id, image_url')
+    .select('id, user_id, image_url, file_url')
     .eq('id', id)
     .single()
 
@@ -273,6 +360,13 @@ exports.deletePost = async (req, res) => {
 
   if (post.image_url) {
     const path = post.image_url.split('/storage/v1/object/public/posts/')[1]
+    if (path) {
+      await supabase.storage.from('posts').remove([path])
+    }
+  }
+
+  if (post.file_url) {
+    const path = post.file_url.split('/storage/v1/object/public/posts/')[1]
     if (path) {
       await supabase.storage.from('posts').remove([path])
     }

@@ -7,6 +7,20 @@ import './PostCard.css'
 
 const TEXT_ONLY_IMAGE_URL = 'text-only-post'
 
+function formatFileSize(bytes) {
+  if (!bytes) return ''
+  const units = ['B', 'KB', 'MB', 'GB']
+  let size = bytes
+  let unitIndex = 0
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024
+    unitIndex += 1
+  }
+
+  return `${size.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`
+}
+
 async function apiRequest(method, url, body) {
   const token = localStorage.getItem('token')
   const isFormData = body instanceof FormData
@@ -197,6 +211,30 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
         <div className="post-caption">
           <strong>{post.user.username}</strong> {post.caption}
         </div>
+      )}
+
+      {post.file_url && (
+        <a
+          className="post-attachment"
+          href={post.file_url}
+          target="_blank"
+          rel="noreferrer"
+          download={post.file_name}
+        >
+          <span className="post-attachment-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M21.4 11.6 12 21a6 6 0 0 1-8.5-8.5l9.7-9.7a4 4 0 1 1 5.7 5.7l-9.8 9.8a2 2 0 0 1-2.8-2.8l9.1-9.1" />
+            </svg>
+          </span>
+          <span className="post-attachment-text">
+            <strong>{post.file_name || 'Arquivo anexado'}</strong>
+            {(post.file_type || post.file_size) && (
+              <small>
+                {[post.file_type, formatFileSize(post.file_size)].filter(Boolean).join(' · ')}
+              </small>
+            )}
+          </span>
+        </a>
       )}
 
       {/* comments toggle label */}
