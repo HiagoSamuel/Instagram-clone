@@ -60,10 +60,12 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
   // new comment form
   const [newText, setNewText]           = useState('')
   const [newImage, setNewImage]         = useState(null)
+  const [newAttachment, setNewAttachment] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
   const [submitting, setSubmitting]     = useState(false)
   const [commentError, setCommentError] = useState('')
   const imgInputRef = useRef(null)
+  const attachmentInputRef = useRef(null)
 
   // FIX: revoga URL de preview ao desmontar ou trocar imagem (evita memory leak)
   useEffect(() => {
@@ -109,9 +111,20 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
     if (imgInputRef.current) imgInputRef.current.value = ''
   }
 
+  const handleAttachmentChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setNewAttachment(file)
+  }
+
+  const clearAttachment = () => {
+    setNewAttachment(null)
+    if (attachmentInputRef.current) attachmentInputRef.current.value = ''
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!newText.trim() && !newImage) return
+    if (!newText.trim() && !newImage && !newAttachment) return
     setSubmitting(true)
     setCommentError('')
 
@@ -119,11 +132,13 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
       const fd = new FormData()
       if (newText.trim()) fd.append('content', newText.trim())
       if (newImage) fd.append('image', newImage)
+      if (newAttachment) fd.append('attachment', newAttachment)
 
       const created = await apiRequest('POST', `/posts/${post.id}/comments`, fd)
       setComments((prev) => [...prev, created])
       setNewText('')
       clearImage()
+      clearAttachment()
     } catch (err) {
       setCommentError(err.message)
     } finally {
@@ -282,6 +297,29 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
                   {c.image_url && (
                     <img src={c.image_url} alt="Imagem do comentário" className="comment-image" />
                   )}
+                  {c.file_url && (
+                    <a
+                      className="comment-attachment"
+                      href={c.file_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      download={c.file_name}
+                    >
+                      <span className="comment-attachment-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                          <path d="M21.4 11.6 12 21a6 6 0 0 1-8.5-8.5l9.7-9.7a4 4 0 1 1 5.7 5.7l-9.8 9.8a2 2 0 0 1-2.8-2.8l9.1-9.1" />
+                        </svg>
+                      </span>
+                      <span className="comment-attachment-text">
+                        <strong>{c.file_name || 'Arquivo anexado'}</strong>
+                        {(c.file_type || c.file_size) && (
+                          <small>
+                            {[c.file_type, formatFileSize(c.file_size)].filter(Boolean).join(' · ')}
+                          </small>
+                        )}
+                      </span>
+                    </a>
+                  )}
                 </div>
               </li>
             ))}
@@ -307,6 +345,13 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
                 </div>
               )}
 
+              {newAttachment && (
+                <div className="comment-file-preview">
+                  <span className="comment-file-preview-name">{newAttachment.name}</span>
+                  <button type="button" className="comment-file-remove" onClick={clearAttachment}>✕</button>
+                </div>
+              )}
+
               <div className="comment-form-actions">
                 <button
                   type="button"
@@ -324,9 +369,26 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
                   onChange={handleImageChange}
                 />
                 <button
+                  type="button"
+                  className="comment-img-btn comment-file-btn"
+                  onClick={() => attachmentInputRef.current.click()}
+                  title="Adicionar arquivo"
+                  aria-label="Adicionar arquivo"
+                >
+                  <svg className="comment-paperclip-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M21.4 11.6 12 21a6 6 0 0 1-8.5-8.5l9.7-9.7a4 4 0 1 1 5.7 5.7l-9.8 9.8a2 2 0 0 1-2.8-2.8l9.1-9.1" />
+                  </svg>
+                </button>
+                <input
+                  ref={attachmentInputRef}
+                  type="file"
+                  style={{ display: 'none' }}
+                  onChange={handleAttachmentChange}
+                />
+                <button
                   type="submit"
                   className="comment-submit-btn"
-                  disabled={submitting || (!newText.trim() && !newImage)}
+                  disabled={submitting || (!newText.trim() && !newImage && !newAttachment)}
                 >
                   {submitting ? '...' : 'Publicar'}
                 </button>

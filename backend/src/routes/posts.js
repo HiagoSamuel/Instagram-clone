@@ -45,7 +45,10 @@ router.delete('/:id',         authMiddleware,                        deletePost)
 
 // FIX: rotas de comentários agora registradas aqui (estavam em arquivo morto)
 router.get('/:id/comments',                   authMiddleware,                        getComments)
-router.post('/:id/comments',                  authMiddleware, upload.single('image'), createComment)
+router.post('/:id/comments',                  authMiddleware, upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'attachment', maxCount: 1 },
+]), createComment)
 router.delete('/:postId/comments/:commentId', authMiddleware,                        deleteComment)
 
 // FIX: tratamento de erro do multer (tipo/tamanho inválido)

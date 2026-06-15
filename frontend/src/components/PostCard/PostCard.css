@@ -232,6 +232,65 @@
   display: block;
 }
 
+.comment-attachment {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  max-width: 280px;
+  padding: 9px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.comment-attachment:hover {
+  border-color: var(--primary);
+}
+
+.comment-attachment-icon {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  background: var(--primary);
+  color: var(--text-inverse);
+}
+
+.comment-attachment-icon svg,
+.comment-paperclip-icon {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.comment-attachment-text {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.comment-attachment-text strong,
+.comment-attachment-text small,
+.comment-file-preview-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comment-attachment-text small {
+  color: var(--text-muted);
+}
+
 /* new comment form */
 .comment-form {
   display: flex;
@@ -299,6 +358,36 @@
   line-height: 1;
 }
 
+.comment-file-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 7px 9px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 0.82rem;
+}
+
+.comment-file-preview-name {
+  min-width: 0;
+}
+
+.comment-file-remove {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.65rem;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
 .comment-form-actions {
   display: flex;
   align-items: center;
@@ -318,6 +407,13 @@
 
 .comment-img-btn:hover {
   transform: scale(1.15);
+}
+
+.comment-file-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
 }
 
 .comment-submit-btn {
