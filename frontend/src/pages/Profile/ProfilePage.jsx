@@ -5,15 +5,15 @@ import { postService } from '../../services/postService'
 import { userService } from '../../services/userService'
 import Avatar from '../../components/Avatar/Avatar'
 import FriendButton from '../../components/FriendButton'
+import PostCard from '../../components/PostCard/PostCard'
 import './ProfilePage.css'
-
-const TEXT_ONLY_IMAGE_URL = 'text-only-post'
 
 export default function ProfilePage() {
   const { user: currentUser, setUser } = useAuth()
   const { username } = useParams()
   const [profile, setProfile] = useState(null)
   const [posts, setPosts] = useState([])
+  const [canViewPosts, setCanViewPosts] = useState(true)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [friendshipStatus, setFriendshipStatus] = useState('none')
@@ -38,9 +38,11 @@ export default function ProfilePage() {
           setLoading(false)
           return 
         }
-        const { user, posts: postList } = await postService.getUserPosts(targetUsername)
+        const { user, posts: postList, can_view_posts: canViewProfilePosts = true } =
+          await postService.getUserPosts(targetUsername)
         setProfile(user)
         setPosts(postList)
+        setCanViewPosts(canViewProfilePosts)
       } catch (err) {
         setError(err.response?.data?.error || 'Erro ao carregar o perfil.')
       } finally {
@@ -51,9 +53,36 @@ export default function ProfilePage() {
     if (username || currentUser?.username) {
       loadProfile()
     }
-  }, [username, currentUser?.username]) // 🌟 Corrigido: Escuta apenas o username e não o objeto user inteiro
+  }, [username, currentUser?.username, friendshipStatus])
 
-  const isOwnProfile = profile && currentUser && profile.username === currentUser.username
+  const isOwnProfile = profile && currentUser && profile.id === currentUser.id
+
+  const handleLikeToggle = async (postId, liked) => {
+    try {
+      if (liked) {
+        await postService.unlike(postId)
+      } else {
+        await postService.like(postId)
+      }
+      setPosts((current) =>
+        current.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                liked_by_me: !liked,
+                likes_count: liked ? post.likes_count - 1 : post.likes_count + 1,
+              }
+            : post
+        )
+      )
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handlePostDelete = (postId) => {
+    setPosts((current) => current.filter((post) => post.id !== postId))
+  }
 
   const openEdit = () => {
     setEditUsername(profile.username || '')
@@ -134,22 +163,23 @@ export default function ProfilePage() {
 
       <section className="profile-posts">
         <h2>Posts de {profile.username}</h2>
-        {posts.length === 0 ? (
+        {!canViewPosts ? (
+          <div className="profile-private-state">
+            <strong>Posts privados</strong>
+            <p>Adicione este usuário como amigo para ver as publicações dele.</p>
+          </div>
+        ) : posts.length === 0 ? (
           <p>Este usuário não postou nada.</p>
         ) : (
-          <div className="profile-post-grid">
-            {posts.map((post) => {
-              const hasImage = post.image_url && post.image_url !== TEXT_ONLY_IMAGE_URL
-              return (
-              <article
+          <div className="profile-feed-list">
+            {posts.map((post) => (
+              <PostCard
                 key={post.id}
-                className={`profile-post-card${hasImage ? '' : ' profile-post-card-text-only'}`}
-              >
-                {hasImage && <img src={post.image_url} alt={post.caption || 'Post'} />}
-                {post.caption && <p>{post.caption}</p>}
-              </article>
-              )
-            })}
+                post={post}
+                onLikeToggle={handleLikeToggle}
+                onPostDelete={handlePostDelete}
+              />
+            ))}
           </div>
         )}
       </section>

@@ -7,6 +7,8 @@ import CreatePostModal from '../../components/CreatePostModal/CreatePostModal'
 import SettingsMenu from '../../components/SettingsMenu/SettingsMenu'
 import api from '../../services/api'
 
+const FEED_PAGE_SIZE = 20
+
 export default function HomePage() {
   const { user, logout } = useAuth()
   const [posts, setPosts] = useState([])
@@ -14,12 +16,15 @@ export default function HomePage() {
   const [error, setError] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [pendingCount, setPendingCount] = useState(0)
+  const [hasMorePosts, setHasMorePosts] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
 
   useEffect(() => {
     const loadFeed = async () => {
       try {
-        const data = await postService.getFeed()
+        const data = await postService.getFeed({ limit: FEED_PAGE_SIZE, offset: 0 })
         setPosts(data)
+        setHasMorePosts(data.length === FEED_PAGE_SIZE)
       } catch (err) {
         console.error(err)
         setError('Erro ao carregar o feed. Tente novamente.')
@@ -34,6 +39,25 @@ export default function HomePage() {
       .then(({ data }) => setPendingCount(data.length))
       .catch(() => setPendingCount(0))
   }, [])
+
+  const loadMorePosts = async () => {
+    if (loadingMore || !hasMorePosts) return
+
+    setLoadingMore(true)
+    try {
+      const data = await postService.getFeed({
+        limit: FEED_PAGE_SIZE,
+        offset: posts.length,
+      })
+      setPosts((current) => [...current, ...data])
+      setHasMorePosts(data.length === FEED_PAGE_SIZE)
+    } catch (err) {
+      console.error(err)
+      setError('Erro ao carregar mais posts. Tente novamente.')
+    } finally {
+      setLoadingMore(false)
+    }
+  }
 
   const handleLikeToggle = async (postId, liked) => {
     try {
@@ -114,16 +138,30 @@ export default function HomePage() {
       ) : posts.length === 0 ? (
         <p>Não há posts para mostrar ainda.</p>
       ) : (
-        <div className="feed-list">
-          {posts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              onLikeToggle={handleLikeToggle}
-              onPostDelete={handlePostDelete}
-            />
-          ))}
-        </div>
+        <>
+          <div className="feed-list">
+            {posts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                onLikeToggle={handleLikeToggle}
+                onPostDelete={handlePostDelete}
+              />
+            ))}
+          </div>
+          {hasMorePosts && (
+            <div className="feed-load-more">
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={loadMorePosts}
+                disabled={loadingMore}
+              >
+                {loadingMore ? 'Carregando...' : 'Carregar mais'}
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       <CreatePostModal

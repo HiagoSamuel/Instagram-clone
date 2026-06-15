@@ -127,6 +127,12 @@
   gap: 24px;
 }
 
+.feed-load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
 .post-card {
   background: var(--surface);
   border: 1px solid var(--border-soft);

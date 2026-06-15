@@ -1,10 +1,24 @@
 const supabase = require('../services/supabase')
-const { isMissingFriendshipsTable } = require('./friendshipController')
+const { areFriends, isMissingFriendshipsTable } = require('./friendshipController')
 
 const TEXT_ONLY_IMAGE_URL = 'text-only-post'
+const DEFAULT_FEED_LIMIT = 20
+const MAX_FEED_LIMIT = 50
+
+function parsePagination(query) {
+  const rawLimit = Number.parseInt(query.limit, 10)
+  const rawOffset = Number.parseInt(query.offset, 10)
+  const limit = Number.isFinite(rawLimit)
+    ? Math.min(Math.max(rawLimit, 1), MAX_FEED_LIMIT)
+    : DEFAULT_FEED_LIMIT
+  const offset = Number.isFinite(rawOffset) ? Math.max(rawOffset, 0) : 0
+
+  return { limit, offset }
+}
 
 exports.getFeed = async (req, res) => {
   const { userId } = req.user
+  const { limit, offset } = parsePagination(req.query)
 
   const { data: friendships, error: friendshipsError } = await supabase
     .from('friendships')
@@ -42,6 +56,7 @@ exports.getFeed = async (req, res) => {
     `)
     .in('user_id', visibleUserIds)
     .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1)
 
   if (error) {
     return res.status(500).json({ error: 'Erro ao buscar feed' })
@@ -50,10 +65,12 @@ exports.getFeed = async (req, res) => {
   // FIX: busca todas as curtidas de uma vez (evita N+1)
   const postIds = posts.map((p) => p.id)
 
-  const { data: allLikes } = await supabase
-    .from('likes')
-    .select('post_id, user_id')
-    .in('post_id', postIds)
+  const { data: allLikes } = postIds.length
+    ? await supabase
+      .from('likes')
+      .select('post_id, user_id')
+      .in('post_id', postIds)
+    : { data: [] }
 
   const likesMap = {}
   const userLikedSet = new Set()
@@ -144,6 +161,28 @@ exports.getUserPosts = async (req, res) => {
     return res.status(404).json({ error: 'Usuário não encontrado' })
   }
 
+  const isOwnProfile = user.id === userId
+  let canViewPosts = isOwnProfile
+
+  if (!canViewPosts) {
+    try {
+      canViewPosts = await areFriends(userId, user.id)
+    } catch (friendshipError) {
+      if (!isMissingFriendshipsTable(friendshipError)) {
+        return res.status(500).json({ error: 'Erro ao verificar amizade' })
+      }
+      canViewPosts = false
+    }
+  }
+
+  if (!canViewPosts) {
+    return res.json({
+      user,
+      posts: [],
+      can_view_posts: false,
+    })
+  }
+
   const { data: posts, error } = await supabase
     .from('posts')
     .select('id, image_url, caption, created_at, user_id')
@@ -179,7 +218,7 @@ exports.getUserPosts = async (req, res) => {
   }))
 
   // FIX: retorna objeto {user, posts} para compatibilidade com ProfilePage
-  return res.json({ user, posts: postsWithLikes })
+  return res.json({ user, posts: postsWithLikes, can_view_posts: true })
 }
 
 exports.likePost = async (req, res) => {
