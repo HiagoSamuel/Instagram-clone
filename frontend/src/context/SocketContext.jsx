@@ -25,7 +25,6 @@ export function SocketProvider({ children }) {
 
     const socket = io(getSocketUrl(), {
       auth: { token },
-      transports: ['websocket', 'polling'],
     })
 
     socketRef.current = socket

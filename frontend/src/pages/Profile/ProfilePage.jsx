@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { postService } from '../../services/postService'
 import { userService } from '../../services/userService'
-import Avatar from '../../components/Avatar/Avatar'
+import Avatar, { DEFAULT_AVATAR_SRC } from '../../components/Avatar/Avatar'
 import FriendButton from '../../components/FriendButton'
 import PostCard from '../../components/PostCard/PostCard'
 import './ProfilePage.css'
@@ -194,7 +194,7 @@ export default function ProfilePage() {
             <div className="edit-avatar-row">
               <div className="edit-avatar-wrap" onClick={() => fileInputRef.current.click()}>
                 <img
-                  src={avatarPreview || profile.avatar_url || '/default-avatar.png'}
+                  src={avatarPreview || profile.avatar_url || DEFAULT_AVATAR_SRC}
                   alt="Pré-visualização"
                   className="edit-avatar-img"
                 />
