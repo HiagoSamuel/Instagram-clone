@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
-import { API_BASE_URL } from '../services/api'
+import { API_BASE_URL, handleAuthExpired } from '../services/api'
 import { useAuth } from './AuthContext'
 
 const SocketContext = createContext({ socket: null, isConnected: false })
@@ -25,15 +25,23 @@ export function SocketProvider({ children }) {
 
     const socket = io(getSocketUrl(), {
       auth: { token },
+      transports: ['websocket'],
     })
 
     socketRef.current = socket
     socket.on('connect', () => setIsConnected(true))
     socket.on('disconnect', () => setIsConnected(false))
+    socket.on('connect_error', (error) => {
+      setIsConnected(false)
+      if (error.message === 'Unauthorized') {
+        handleAuthExpired()
+      }
+    })
 
     return () => {
       socket.off('connect')
       socket.off('disconnect')
+      socket.off('connect_error')
       socket.disconnect()
       socketRef.current = null
       setIsConnected(false)

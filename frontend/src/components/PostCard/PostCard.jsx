@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { apiUrl } from '../../services/api'
+import { apiUrl, handleAuthExpired } from '../../services/api'
 import Avatar from '../Avatar/Avatar'
 import './PostCard.css'
 
@@ -24,18 +24,28 @@ function formatFileSize(bytes) {
 async function apiRequest(method, url, body) {
   const token = localStorage.getItem('token')
   const isFormData = body instanceof FormData
+  const headers = {
+    ...(!isFormData && body ? { 'Content-Type': 'application/json' } : {}),
+  }
+
+  if (!token) {
+    handleAuthExpired()
+    throw new Error('Sessao expirada. Faça login novamente.')
+  }
+
+  headers.Authorization = `Bearer ${token}`
 
   const res = await fetch(apiUrl(url), {
     method,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      ...(!isFormData && body ? { 'Content-Type': 'application/json' } : {}),
-    },
+    headers,
     body: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
   })
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
+    if (res.status === 401) {
+      handleAuthExpired()
+    }
     throw new Error(err.error || 'Erro na requisição')
   }
 
