@@ -66,6 +66,7 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
   const [comments, setComments]             = useState([])
   const [commentsLoaded, setCommentsLoaded] = useState(false)
   const [loadingComments, setLoadingComments] = useState(false)
+  const [unreadCommentCount, setUnreadCommentCount] = useState(0)
   // FIX: estado de erro para comentários (antes era silenciado)
   const [commentsError, setCommentsError]   = useState('')
 
@@ -78,6 +79,7 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
   const [commentError, setCommentError] = useState('')
   const imgInputRef = useRef(null)
   const attachmentInputRef = useRef(null)
+  const unreadCommentLabel = unreadCommentCount > 99 ? '99+' : unreadCommentCount
 
   // FIX: revoga URL de preview ao desmontar ou trocar imagem (evita memory leak)
   useEffect(() => {
@@ -93,12 +95,18 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
 
     const handleNewComment = ({ postId, comment }) => {
       if (String(postId) !== String(post.id) || !comment) return
+      const shouldCountAsUnread = !commentsOpen && comment.user_id !== currentUser?.id
 
       setComments((prev) => {
         if (prev.some((item) => item.id === comment.id)) return prev
+        if (shouldCountAsUnread) {
+          setUnreadCommentCount((count) => count + 1)
+        }
         return [...prev, comment]
       })
-      setCommentsLoaded(true)
+      if (commentsLoaded || commentsOpen) {
+        setCommentsLoaded(true)
+      }
       setCommentsError('')
     }
 
@@ -114,9 +122,15 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
       socket.off('new_comment', handleNewComment)
       socket.off('comment_deleted', handleCommentDeleted)
     }
-  }, [socket, post.id])
+  }, [socket, post.id, commentsLoaded, commentsOpen, currentUser?.id])
 
   const toggleComments = async () => {
+    const openingComments = !commentsOpen
+
+    if (openingComments) {
+      setUnreadCommentCount(0)
+    }
+
     if (!commentsOpen && !commentsLoaded) {
       setLoadingComments(true)
       setCommentsError('')
@@ -258,8 +272,22 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
         <button className="post-action-btn" onClick={() => onLikeToggle(post.id, liked)}>
           {liked ? '❤️' : '🤍'}
         </button>
-        <button className="post-action-btn" onClick={toggleComments} title="Comentários">
-          💬
+        <button
+          className="post-action-btn post-comment-action-btn"
+          onClick={toggleComments}
+          title="Comentários"
+          aria-label={
+            unreadCommentCount > 0
+              ? `${unreadCommentCount} comentário${unreadCommentCount === 1 ? '' : 's'} novo${unreadCommentCount === 1 ? '' : 's'}`
+              : 'Comentários'
+          }
+        >
+          <span aria-hidden="true">💬</span>
+          {unreadCommentCount > 0 && (
+            <span className="post-comment-badge" aria-hidden="true">
+              {unreadCommentLabel}
+            </span>
+          )}
         </button>
         <span className="post-likes-count">{post.likes_count} curtidas</span>
       </div>

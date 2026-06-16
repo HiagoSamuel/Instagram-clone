@@ -51,6 +51,30 @@
   transform: scale(1.18);
 }
 
+.post-comment-action-btn {
+  position: relative;
+}
+
+.post-comment-badge {
+  position: absolute;
+  top: -7px;
+  right: -8px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--surface);
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
 .post-likes-count {
   font-size: 0.9rem;
   color: var(--text-muted);
