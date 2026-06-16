@@ -57,6 +57,46 @@ async function uploadCommentFile(postId, userId, file, folder) {
   return publicData.publicUrl
 }
 
+async function getPostAudienceUserIds(postId, fallbackUserId) {
+  const audience = new Set([fallbackUserId].filter(Boolean))
+
+  const { data: post, error: postError } = await supabase
+    .from('posts')
+    .select('user_id')
+    .eq('id', postId)
+    .single()
+
+  if (postError || !post?.user_id) return [...audience]
+
+  audience.add(post.user_id)
+
+  const { data: friendships } = await supabase
+    .from('friendships')
+    .select('requester_id, addressee_id')
+    .eq('status', 'accepted')
+    .or(`requester_id.eq.${post.user_id},addressee_id.eq.${post.user_id}`)
+
+  ;(friendships || []).forEach((friendship) => {
+    audience.add(friendship.requester_id)
+    audience.add(friendship.addressee_id)
+  })
+
+  return [...audience]
+}
+
+async function emitCommentEvent(req, eventName, postId, payload, fallbackUserId) {
+  const io = req.app.get('io')
+  if (!io) return
+
+  const audienceUserIds = await getPostAudienceUserIds(postId, fallbackUserId)
+  audienceUserIds.forEach((audienceUserId) => {
+    io.to(`user:${audienceUserId}`).emit(eventName, {
+      postId,
+      ...payload,
+    })
+  })
+}
+
 // GET /posts/:id/comments
 exports.getComments = async (req, res) => {
   const { id: postId } = req.params
@@ -138,6 +178,8 @@ exports.createComment = async (req, res) => {
     }
     return res.status(500).json({ error: error.message })
   }
+
+  await emitCommentEvent(req, 'new_comment', postId, { comment }, userId)
 
   res.status(201).json(comment)
 }

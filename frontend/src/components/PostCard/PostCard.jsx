@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useSocket } from '../../context/SocketContext'
 import { apiUrl, handleAuthExpired } from '../../services/api'
 import Avatar from '../Avatar/Avatar'
 import './PostCard.css'
@@ -55,6 +56,7 @@ async function apiRequest(method, url, body) {
 
 export default function PostCard({ post, onLikeToggle, onPostDelete }) {
   const { user: currentUser } = useAuth()
+  const { socket } = useSocket()
   const liked = post.liked_by_me
   const isOwner = currentUser && post.user_id === currentUser.id
   const hasImage = post.image_url && post.image_url !== TEXT_ONLY_IMAGE_URL
@@ -85,6 +87,34 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
       }
     }
   }, [imagePreview])
+
+  useEffect(() => {
+    if (!socket) return undefined
+
+    const handleNewComment = ({ postId, comment }) => {
+      if (String(postId) !== String(post.id) || !comment) return
+
+      setComments((prev) => {
+        if (prev.some((item) => item.id === comment.id)) return prev
+        return [...prev, comment]
+      })
+      setCommentsLoaded(true)
+      setCommentsError('')
+    }
+
+    const handleCommentDeleted = ({ postId, commentId }) => {
+      if (String(postId) !== String(post.id) || !commentId) return
+      setComments((prev) => prev.filter((comment) => comment.id !== commentId))
+    }
+
+    socket.on('new_comment', handleNewComment)
+    socket.on('comment_deleted', handleCommentDeleted)
+
+    return () => {
+      socket.off('new_comment', handleNewComment)
+      socket.off('comment_deleted', handleCommentDeleted)
+    }
+  }, [socket, post.id])
 
   const toggleComments = async () => {
     if (!commentsOpen && !commentsLoaded) {
@@ -145,7 +175,10 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
       if (newAttachment) fd.append('attachment', newAttachment)
 
       const created = await apiRequest('POST', `/posts/${post.id}/comments`, fd)
-      setComments((prev) => [...prev, created])
+      setComments((prev) => {
+        if (prev.some((comment) => comment.id === created.id)) return prev
+        return [...prev, created]
+      })
       setNewText('')
       clearImage()
       clearAttachment()
