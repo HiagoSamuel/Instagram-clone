@@ -63,6 +63,33 @@ async function uploadPostFile(userId, file, folder) {
   return urlData.publicUrl
 }
 
+async function getPostAudienceUserIds(userId) {
+  const audience = new Set([userId])
+
+  const { data: friendships } = await supabase
+    .from('friendships')
+    .select('requester_id, addressee_id')
+    .eq('status', 'accepted')
+    .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
+
+  ;(friendships || []).forEach((friendship) => {
+    audience.add(friendship.requester_id)
+    audience.add(friendship.addressee_id)
+  })
+
+  return [...audience]
+}
+
+async function emitPostEvent(req, eventName, userId, payload) {
+  const io = req.app.get('io')
+  if (!io) return
+
+  const audienceUserIds = await getPostAudienceUserIds(userId)
+  audienceUserIds.forEach((audienceUserId) => {
+    io.to(`user:${audienceUserId}`).emit(eventName, payload)
+  })
+}
+
 function parsePagination(query) {
   const rawLimit = Number.parseInt(query.limit, 10)
   const rawOffset = Number.parseInt(query.offset, 10)
@@ -216,12 +243,16 @@ exports.createPost = async (req, res) => {
     .eq('id', userId)
     .single()
 
-  return res.status(201).json({
+  const postWithDetails = {
     ...post,
     user: user || { id: userId, username: '', avatar_url: null },
     likes_count: 0,
     liked_by_me: false,
-  })
+  }
+
+  await emitPostEvent(req, 'new_post', userId, { post: postWithDetails })
+
+  return res.status(201).json(postWithDetails)
 }
 
 exports.getUserPosts = async (req, res) => {
@@ -380,6 +411,8 @@ exports.deletePost = async (req, res) => {
   if (deleteError) {
     return res.status(500).json({ error: 'Erro ao apagar post' })
   }
+
+  await emitPostEvent(req, 'post_deleted', userId, { postId: id })
 
   return res.status(204).send()
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useSocket } from '../../context/SocketContext'
 import { postService } from '../../services/postService'
 import PostCard from '../../components/PostCard/PostCard'
 import CreatePostModal from '../../components/CreatePostModal/CreatePostModal'
@@ -11,6 +12,7 @@ const FEED_PAGE_SIZE = 20
 
 export default function HomePage() {
   const { user, logout } = useAuth()
+  const { socket } = useSocket()
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -39,6 +41,31 @@ export default function HomePage() {
       .then(({ data }) => setPendingCount(data.length))
       .catch(() => setPendingCount(0))
   }, [])
+
+  useEffect(() => {
+    if (!socket) return undefined
+
+    const handleNewPost = ({ post }) => {
+      if (!post) return
+      setPosts((current) => {
+        if (current.some((item) => item.id === post.id)) return current
+        return [post, ...current]
+      })
+    }
+
+    const handlePostDeleted = ({ postId }) => {
+      if (!postId) return
+      setPosts((current) => current.filter((post) => post.id !== postId))
+    }
+
+    socket.on('new_post', handleNewPost)
+    socket.on('post_deleted', handlePostDeleted)
+
+    return () => {
+      socket.off('new_post', handleNewPost)
+      socket.off('post_deleted', handlePostDeleted)
+    }
+  }, [socket])
 
   const loadMorePosts = async () => {
     if (loadingMore || !hasMorePosts) return
@@ -84,7 +111,10 @@ export default function HomePage() {
 
   // FIX: createPost agora retorna post com user/likes_count/liked_by_me
   const handlePostCreated = (newPost) => {
-    setPosts((current) => [newPost, ...current])
+    setPosts((current) => {
+      if (current.some((post) => post.id === newPost.id)) return current
+      return [newPost, ...current]
+    })
   }
 
   // FIX: onPostDelete agora remove o post da lista sem precisar recarregar

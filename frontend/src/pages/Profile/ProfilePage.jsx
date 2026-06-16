@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useSocket } from '../../context/SocketContext'
 import { postService } from '../../services/postService'
 import { userService } from '../../services/userService'
 import Avatar, { DEFAULT_AVATAR_SRC } from '../../components/Avatar/Avatar'
@@ -10,6 +11,7 @@ import './ProfilePage.css'
 
 export default function ProfilePage() {
   const { user: currentUser, setUser } = useAuth()
+  const { socket } = useSocket()
   const { username } = useParams()
   const [profile, setProfile] = useState(null)
   const [posts, setPosts] = useState([])
@@ -56,6 +58,31 @@ export default function ProfilePage() {
   }, [username, currentUser?.username, friendshipStatus])
 
   const isOwnProfile = profile && currentUser && profile.id === currentUser.id
+
+  useEffect(() => {
+    if (!socket || !profile?.id || !canViewPosts) return undefined
+
+    const handleNewPost = ({ post }) => {
+      if (!post || post.user_id !== profile.id) return
+      setPosts((current) => {
+        if (current.some((item) => item.id === post.id)) return current
+        return [post, ...current]
+      })
+    }
+
+    const handlePostDeleted = ({ postId }) => {
+      if (!postId) return
+      setPosts((current) => current.filter((post) => post.id !== postId))
+    }
+
+    socket.on('new_post', handleNewPost)
+    socket.on('post_deleted', handlePostDeleted)
+
+    return () => {
+      socket.off('new_post', handleNewPost)
+      socket.off('post_deleted', handlePostDeleted)
+    }
+  }, [socket, profile?.id, canViewPosts])
 
   const handleLikeToggle = async (postId, liked) => {
     try {
