@@ -32,12 +32,22 @@ export default function SearchUsersPage() {
       setLoading(true)
       setError('')
       try {
-        const [usersResponse, postsResponse] = await Promise.all([
-          api.get('/search/users', { params: { q: trimmed } }),
+        const [usersResult, postsResult] = await Promise.allSettled([
+          api.get('/search/users', { params: { q: trimmed } }).catch((searchError) => {
+            if (searchError.response?.status === 404) {
+              return api.get('/users/search', { params: { q: trimmed } })
+            }
+            throw searchError
+          }),
           api.get('/search/posts', { params: { q: trimmed.replace(/^#/, '') } }),
         ])
-        setUsers(usersResponse.data)
-        setPosts(postsResponse.data)
+
+        setUsers(usersResult.status === 'fulfilled' ? usersResult.value.data : [])
+        setPosts(postsResult.status === 'fulfilled' ? postsResult.value.data : [])
+
+        if (usersResult.status === 'rejected' && postsResult.status === 'rejected') {
+          setError('Erro ao buscar.')
+        }
       } catch (err) {
         setError(err.response?.data?.error || 'Erro ao buscar.')
       } finally {
