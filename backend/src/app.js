@@ -9,7 +9,11 @@ const postRoutes = require('./routes/posts')
 const friendshipRoutes = require('./routes/friendships')
 const messageRoutes = require('./routes/messages')
 const userRoutes = require('./routes/users')
+const searchRoutes = require('./routes/search')
+const exploreRoutes = require('./routes/explore')
+const pushRoutes = require('./routes/push')
 const { createMessage, buildConversationUpdate } = require('./controllers/messageController')
+const { sendPushToUser } = require('./services/pushService')
 
 const app = express()
 
@@ -36,6 +40,9 @@ app.use('/api/auth', authRoutes)
 app.use('/api/posts', postRoutes)
 app.use('/api/friendships', friendshipRoutes)
 app.use('/api/users', userRoutes)
+app.use('/api/search', searchRoutes)
+app.use('/api/explore', exploreRoutes)
+app.use('/api/push', pushRoutes)
 app.use('/api', messageRoutes)
 
 app.get('/api/health', (req, res) => {
@@ -52,6 +59,7 @@ const io = new Server(server, {
 })
 
 app.set('io', io)
+app.set('onlineUsers', new Map())
 
 io.use((socket, next) => {
   const token = socket.handshake.auth?.token
@@ -67,6 +75,8 @@ io.use((socket, next) => {
 
 io.on('connection', (socket) => {
   const userId = socket.user.userId
+  const onlineUsers = app.get('onlineUsers')
+  onlineUsers.set(userId, (onlineUsers.get(userId) || 0) + 1)
   socket.join(`user:${userId}`)
   console.log(`Usuario ${userId} conectado`)
 
@@ -80,6 +90,13 @@ io.on('connection', (socket) => {
       io.to(`user:${data.receiverId}`).emit('conversation_updated', receiverConversation)
       io.to(`user:${userId}`).emit('conversation_updated', senderConversation)
       socket.emit('message_sent', message)
+      if (!onlineUsers.has(data.receiverId)) {
+        await sendPushToUser(data.receiverId, {
+          title: 'Nova mensagem',
+          body: receiverConversation.last_message_preview || 'Voce recebeu uma mensagem.',
+          url: `/chat/${userId}`,
+        })
+      }
       if (typeof callback === 'function') callback({ ok: true, message })
     } catch (error) {
       const payload = { error: error.message || 'Erro ao enviar mensagem.' }
@@ -89,6 +106,12 @@ io.on('connection', (socket) => {
   })
 
   socket.on('disconnect', () => {
+    const currentCount = onlineUsers.get(userId) || 1
+    if (currentCount <= 1) {
+      onlineUsers.delete(userId)
+    } else {
+      onlineUsers.set(userId, currentCount - 1)
+    }
     console.log(`Usuario ${userId} desconectado`)
   })
 })

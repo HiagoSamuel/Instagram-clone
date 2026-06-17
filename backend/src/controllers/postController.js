@@ -38,6 +38,10 @@ function isMissingPostFileColumns(error) {
   return error?.code === 'PGRST204' || /file_(url|name|type|size)/i.test(error?.message || '')
 }
 
+function isMissingDiscoveryTables(error) {
+  return error?.code === '42P01' || /hashtags|post_hashtags|search_vector|is_public/i.test(error?.message || '')
+}
+
 function safeFileName(name) {
   const ext = path.extname(name || '').toLowerCase()
   const base = path.basename(name || 'arquivo', ext)
@@ -100,64 +104,70 @@ async function getPostLikesCount(postId) {
   return count || 0
 }
 
-function parsePagination(query) {
-  const rawLimit = Number.parseInt(query.limit, 10)
-  const rawOffset = Number.parseInt(query.offset, 10)
-  const limit = Number.isFinite(rawLimit)
-    ? Math.min(Math.max(rawLimit, 1), MAX_FEED_LIMIT)
-    : DEFAULT_FEED_LIMIT
-  const offset = Number.isFinite(rawOffset) ? Math.max(rawOffset, 0) : 0
-
-  return { limit, offset }
+function normalizeHashtag(tag) {
+  return String(tag || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/^#/, '')
+    .toLowerCase()
+    .trim()
 }
 
-exports.getFeed = async (req, res) => {
-  const { userId } = req.user
-  const { limit, offset } = parsePagination(req.query)
+function extractHashtags(caption) {
+  const matches = String(caption || '').match(/#[\p{L}\p{N}_]+/gu) || []
+  return [...new Set(matches.map(normalizeHashtag).filter(Boolean))]
+}
 
+async function syncPostHashtags(postId, caption) {
+  const tags = extractHashtags(caption)
+  if (!tags.length) return
+
+  for (const tag of tags) {
+    const { data: hashtag, error: hashtagError } = await supabase
+      .from('hashtags')
+      .upsert({ tag }, { onConflict: 'tag' })
+      .select('id')
+      .single()
+
+    if (hashtagError) {
+      if (isMissingDiscoveryTables(hashtagError)) return
+      throw hashtagError
+    }
+
+    const { error: linkError } = await supabase
+      .from('post_hashtags')
+      .upsert(
+        { post_id: postId, hashtag_id: hashtag.id },
+        { onConflict: 'post_id,hashtag_id' }
+      )
+
+    if (linkError) {
+      if (isMissingDiscoveryTables(linkError)) return
+      throw linkError
+    }
+  }
+}
+
+async function getVisibleFeedUserIds(userId) {
   const { data: friendships, error: friendshipsError } = await supabase
     .from('friendships')
     .select('requester_id, addressee_id')
     .eq('status', 'accepted')
     .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
 
-  if (friendshipsError) {
-    if (!isMissingFriendshipsTable(friendshipsError)) {
-      return res.status(500).json({ error: 'Erro ao buscar amigos' })
-    }
+  if (friendshipsError && !isMissingFriendshipsTable(friendshipsError)) {
+    throw friendshipsError
   }
 
-  const visibleUserIds = [
+  return [
     userId,
     ...(friendships || []).map((friendship) =>
       friendship.requester_id === userId ? friendship.addressee_id : friendship.requester_id
     ),
   ]
+}
 
-  // FIX: busca posts com contagem de likes e status de curtida em queries otimizadas
-  let { data: posts, error } = await supabase
-    .from('posts')
-    .select(POST_SELECT_WITH_FILES)
-    .in('user_id', visibleUserIds)
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1)
-
-  if (error && isMissingPostFileColumns(error)) {
-    const fallback = await supabase
-      .from('posts')
-      .select(POST_SELECT_BASE)
-      .in('user_id', visibleUserIds)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
-    posts = fallback.data
-    error = fallback.error
-  }
-
-  if (error) {
-    return res.status(500).json({ error: 'Erro ao buscar feed' })
-  }
-
-  // FIX: busca todas as curtidas de uma vez (evita N+1)
+async function enrichPostsForUser(posts = [], userId) {
   const postIds = posts.map((p) => p.id)
 
   const { data: allLikes } = postIds.length
@@ -177,12 +187,92 @@ exports.getFeed = async (req, res) => {
     }
   }
 
-  const postsWithLikes = posts.map((post) => ({
+  return posts.map((post) => ({
     ...post,
-    user: post.users,
+    user: post.users || post.user,
     likes_count: likesMap[post.id] || 0,
     liked_by_me: userLikedSet.has(post.id),
   }))
+}
+
+function parsePagination(query) {
+  const rawLimit = Number.parseInt(query.limit, 10)
+  const rawOffset = Number.parseInt(query.offset, 10)
+  const limit = Number.isFinite(rawLimit)
+    ? Math.min(Math.max(rawLimit, 1), MAX_FEED_LIMIT)
+    : DEFAULT_FEED_LIMIT
+  const offset = Number.isFinite(rawOffset) ? Math.max(rawOffset, 0) : 0
+
+  return { limit, offset }
+}
+
+exports.getFeed = async (req, res) => {
+  const { userId } = req.user
+  const { limit, offset } = parsePagination(req.query)
+  const usesCursor = req.query.cursor === '1' || typeof req.query.before === 'string'
+  const fetchLimit = usesCursor ? limit + 1 : limit
+
+  let visibleUserIds
+  try {
+    visibleUserIds = await getVisibleFeedUserIds(userId)
+  } catch (_error) {
+    return res.status(500).json({ error: 'Erro ao buscar amigos' })
+  }
+
+  // FIX: busca posts com contagem de likes e status de curtida em queries otimizadas
+  let postsQuery = supabase
+    .from('posts')
+    .select(POST_SELECT_WITH_FILES)
+    .in('user_id', visibleUserIds)
+    .order('created_at', { ascending: false })
+
+  if (usesCursor) {
+    if (req.query.before) {
+      postsQuery = postsQuery.lt('created_at', req.query.before)
+    }
+    postsQuery = postsQuery.limit(fetchLimit)
+  } else {
+    postsQuery = postsQuery.range(offset, offset + fetchLimit - 1)
+  }
+
+  let { data: posts, error } = await postsQuery
+
+  if (error && isMissingPostFileColumns(error)) {
+    let fallbackQuery = supabase
+      .from('posts')
+      .select(POST_SELECT_BASE)
+      .in('user_id', visibleUserIds)
+      .order('created_at', { ascending: false })
+
+    if (usesCursor) {
+      if (req.query.before) {
+        fallbackQuery = fallbackQuery.lt('created_at', req.query.before)
+      }
+      fallbackQuery = fallbackQuery.limit(fetchLimit)
+    } else {
+      fallbackQuery = fallbackQuery.range(offset, offset + fetchLimit - 1)
+    }
+
+    const fallback = await fallbackQuery
+    posts = fallback.data
+    error = fallback.error
+  }
+
+  if (error) {
+    return res.status(500).json({ error: 'Erro ao buscar feed' })
+  }
+
+  const hasMore = usesCursor && posts.length > limit
+  const pagePosts = usesCursor ? posts.slice(0, limit) : posts
+  const postsWithLikes = await enrichPostsForUser(pagePosts, userId)
+
+  if (usesCursor) {
+    return res.json({
+      items: postsWithLikes,
+      nextCursor: hasMore && pagePosts.length ? pagePosts[pagePosts.length - 1].created_at : null,
+      hasMore,
+    })
+  }
 
   return res.json(postsWithLikes)
 }
@@ -258,6 +348,12 @@ exports.createPost = async (req, res) => {
     user: user || { id: userId, username: '', avatar_url: null },
     likes_count: 0,
     liked_by_me: false,
+  }
+
+  try {
+    await syncPostHashtags(post.id, caption)
+  } catch (hashtagError) {
+    console.warn('Nao foi possivel sincronizar hashtags do post:', hashtagError.message)
   }
 
   await emitPostEvent(req, 'new_post', userId, { post: postWithDetails })
@@ -451,4 +547,14 @@ exports.deletePost = async (req, res) => {
   await emitPostEvent(req, 'post_deleted', userId, { postId: id })
 
   return res.status(204).send()
+}
+
+exports.discoveryHelpers = {
+  POST_SELECT_WITH_FILES,
+  POST_SELECT_BASE,
+  enrichPostsForUser,
+  extractHashtags,
+  getVisibleFeedUserIds,
+  isMissingDiscoveryTables,
+  isMissingPostFileColumns,
 }

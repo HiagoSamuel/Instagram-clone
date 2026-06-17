@@ -423,6 +423,49 @@
   color: var(--text);
 }
 
+.search-results,
+.search-section {
+  display: grid;
+  gap: 16px;
+}
+
+.search-section {
+  margin-top: 22px;
+}
+
+.search-section h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.hashtag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hashtag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.hashtag-pill span {
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
+.explore-grid .post-card {
+  align-self: start;
+}
+
 .request-item,
 .conversation-item {
   display: flex;

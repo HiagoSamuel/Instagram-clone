@@ -8,3 +8,17 @@ createRoot(document.getElementById('root')).render(
     <App />
   </StrictMode>,
 )
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js').catch((error) => {
+      console.warn('Service worker nao registrado:', error)
+    })
+  })
+
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data?.type === 'navigate' && event.data.url) {
+      window.location.assign(event.data.url)
+    }
+  })
+}

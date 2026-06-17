@@ -10,6 +10,8 @@ import FriendRequestsPage from './pages/FriendRequestsPage'
 import ConversationsPage from './pages/ConversationsPage'
 import ChatPage from './pages/ChatPage'
 import SearchUsersPage from './pages/SearchUsersPage'
+import HashtagPage from './pages/HashtagPage'
+import ExplorePage from './pages/ExplorePage'
 import SocketStatusBanner from './components/SocketStatusBanner'
 import './App.css'
 
@@ -66,6 +68,22 @@ function App() {
                 element={
                   <RequireAuth>
                     <SearchUsersPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/explore"
+                element={
+                  <RequireAuth>
+                    <ExplorePage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/hashtags/:tag"
+                element={
+                  <RequireAuth>
+                    <HashtagPage />
                   </RequireAuth>
                 }
               />

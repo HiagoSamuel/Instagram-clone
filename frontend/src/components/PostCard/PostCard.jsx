@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
 import { apiUrl, handleAuthExpired } from '../../services/api'
+import { postService } from '../../services/postService'
 import Avatar from '../Avatar/Avatar'
 import './PostCard.css'
 
@@ -54,6 +55,20 @@ async function apiRequest(method, url, body) {
   return res.json()
 }
 
+function renderCaptionWithHashtags(caption) {
+  const parts = String(caption || '').split(/(#[\p{L}\p{N}_]+)/gu)
+
+  return parts.map((part, index) => {
+    if (!part.startsWith('#')) return part
+    const tag = part.slice(1).toLowerCase()
+    return (
+      <Link key={`${tag}-${index}`} to={`/hashtags/${tag}`} className="post-hashtag">
+        {part}
+      </Link>
+    )
+  })
+}
+
 export default function PostCard({ post, onLikeToggle, onPostDelete }) {
   const { user: currentUser } = useAuth()
   const { socket } = useSocket()
@@ -77,9 +92,16 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
   const [imagePreview, setImagePreview] = useState(null)
   const [submitting, setSubmitting]     = useState(false)
   const [commentError, setCommentError] = useState('')
+  const [localLiked, setLocalLiked] = useState(liked)
+  const [localLikesCount, setLocalLikesCount] = useState(post.likes_count || 0)
   const imgInputRef = useRef(null)
   const attachmentInputRef = useRef(null)
   const unreadCommentLabel = unreadCommentCount > 99 ? '99+' : unreadCommentCount
+
+  useEffect(() => {
+    setLocalLiked(post.liked_by_me)
+    setLocalLikesCount(post.likes_count || 0)
+  }, [post.liked_by_me, post.likes_count])
 
   // FIX: revoga URL de preview ao desmontar ou trocar imagem (evita memory leak)
   useEffect(() => {
@@ -222,6 +244,28 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
     }
   }
 
+  const handleLikeClick = async () => {
+    if (onLikeToggle) {
+      onLikeToggle(post.id, localLiked)
+      return
+    }
+
+    setLocalLiked((current) => !current)
+    setLocalLikesCount((current) => current + (localLiked ? -1 : 1))
+
+    try {
+      if (localLiked) {
+        await postService.unlike(post.id)
+      } else {
+        await postService.like(post.id)
+      }
+    } catch (err) {
+      setLocalLiked(localLiked)
+      setLocalLikesCount(post.likes_count || 0)
+      console.error(err)
+    }
+  }
+
   const canDelete = (comment) =>
     currentUser &&
     (comment.user_id === currentUser.id || post.user_id === currentUser.id)
@@ -269,8 +313,8 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
 
       {/* actions */}
       <div className="post-actions">
-        <button className="post-action-btn" onClick={() => onLikeToggle(post.id, liked)}>
-          {liked ? '❤️' : '🤍'}
+        <button className="post-action-btn" onClick={handleLikeClick}>
+          {localLiked ? '❤️' : '🤍'}
         </button>
         <button
           className="post-action-btn post-comment-action-btn"
@@ -289,13 +333,13 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
             </span>
           )}
         </button>
-        <span className="post-likes-count">{post.likes_count} curtidas</span>
+        <span className="post-likes-count">{localLikesCount} curtidas</span>
       </div>
 
       {/* caption */}
       {post.caption && (
         <div className="post-caption">
-          <strong>{post.user.username}</strong> {post.caption}
+          <strong>{post.user.username}</strong> {renderCaptionWithHashtags(post.caption)}
         </div>
       )}
 

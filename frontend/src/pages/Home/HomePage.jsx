@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
@@ -21,13 +21,16 @@ export default function HomePage() {
   const [pendingCount, setPendingCount] = useState(0)
   const [hasMorePosts, setHasMorePosts] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [nextCursor, setNextCursor] = useState(null)
+  const loadMoreRef = useRef(null)
 
   useEffect(() => {
     const loadFeed = async () => {
       try {
-        const data = await postService.getFeed({ limit: FEED_PAGE_SIZE, offset: 0 })
-        setPosts(data)
-        setHasMorePosts(data.length === FEED_PAGE_SIZE)
+        const data = await postService.getFeed({ limit: FEED_PAGE_SIZE, cursor: true })
+        setPosts(data.items || [])
+        setNextCursor(data.nextCursor || null)
+        setHasMorePosts(Boolean(data.hasMore))
       } catch (err) {
         console.error(err)
         setError('Erro ao carregar o feed. Tente novamente.')
@@ -89,24 +92,44 @@ export default function HomePage() {
     }
   }, [socket, user?.id])
 
-  const loadMorePosts = async () => {
+  const loadMorePosts = useCallback(async () => {
     if (loadingMore || !hasMorePosts) return
 
     setLoadingMore(true)
     try {
       const data = await postService.getFeed({
         limit: FEED_PAGE_SIZE,
-        offset: posts.length,
+        before: nextCursor,
+        cursor: true,
       })
-      setPosts((current) => [...current, ...data])
-      setHasMorePosts(data.length === FEED_PAGE_SIZE)
+      setPosts((current) => {
+        const seen = new Set(current.map((post) => post.id))
+        const nextItems = (data.items || []).filter((post) => !seen.has(post.id))
+        return [...current, ...nextItems]
+      })
+      setNextCursor(data.nextCursor || null)
+      setHasMorePosts(Boolean(data.hasMore))
     } catch (err) {
       console.error(err)
       setError('Erro ao carregar mais posts. Tente novamente.')
     } finally {
       setLoadingMore(false)
     }
-  }
+  }, [hasMorePosts, loadingMore, nextCursor])
+
+  useEffect(() => {
+    const target = loadMoreRef.current
+    if (!target || !hasMorePosts) return undefined
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) {
+        loadMorePosts()
+      }
+    }, { rootMargin: '240px' })
+
+    observer.observe(target)
+    return () => observer.disconnect()
+  }, [hasMorePosts, loadMorePosts])
 
   const handleLikeToggle = async (postId, liked) => {
     try {
@@ -162,6 +185,9 @@ export default function HomePage() {
           <Link to="/search" className="button button-secondary">
             Buscar
           </Link>
+          <Link to="/explore" className="button button-secondary">
+            Explorar
+          </Link>
           <Link to="/requests" className="button button-secondary nav-button-with-badge">
             Solicitacoes
             {pendingCount > 0 && <span className="nav-badge">{pendingCount}</span>}
@@ -199,18 +225,10 @@ export default function HomePage() {
               />
             ))}
           </div>
-          {hasMorePosts && (
-            <div className="feed-load-more">
-              <button
-                type="button"
-                className="button button-secondary"
-                onClick={loadMorePosts}
-                disabled={loadingMore}
-              >
-                {loadingMore ? 'Carregando...' : 'Carregar mais'}
-              </button>
-            </div>
-          )}
+          <div ref={loadMoreRef} className="feed-load-more">
+            {loadingMore && <span>Carregando mais posts...</span>}
+            {!hasMorePosts && <span>Voce chegou ao fim do feed.</span>}
+          </div>
         </>
       )}
 

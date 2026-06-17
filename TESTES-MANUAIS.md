@@ -68,3 +68,71 @@ Resultado esperado:
 - A faixa mostra estado offline/reconectando.
 - Ao reconectar, aparece estado sincronizado.
 - Mensagens recebidas durante a queda aparecem sem recarregar a pagina.
+
+## 6. Busca: usuarios, posts e hashtags
+
+1. Crie um post com legenda contendo uma palavra facil e uma hashtag, por exemplo `teste busca #familia`.
+2. Abra `/search`.
+3. Busque pelo username de outro usuario.
+4. Busque pela palavra da legenda.
+5. Busque por `#familia` e clique no chip da hashtag.
+
+Resultado esperado:
+- A busca mostra usuarios correspondentes.
+- A busca mostra posts cuja legenda combina com o termo.
+- O link da hashtag abre `/hashtags/familia`.
+- A pagina da hashtag lista posts marcados com ela.
+
+Observacao:
+- Execute `backend/supabase-fase4.sql` no Supabase para ativar a busca full-text e a tabela de hashtags. Antes disso, a API usa fallback por `ILIKE`.
+
+## 7. Explorar e hashtags em alta
+
+1. Crie posts com hashtags a partir de contas diferentes.
+2. Entre com um usuario que nao seja amigo dessas contas.
+3. Abra `/explore`.
+4. Curta/comente alguns posts com outro usuario e recarregue o Explorar.
+
+Resultado esperado:
+- A pagina mostra posts publicos fora do ciclo de amigos.
+- Hashtags em alta aparecem no topo quando existem dados em `post_hashtags`.
+- Posts com mais interacao recente tendem a aparecer mais acima.
+
+## 8. Infinite scroll do feed
+
+1. Garanta que existem mais de 20 posts visiveis para o usuario logado.
+2. Abra o feed.
+3. Role ate o final da lista.
+
+Resultado esperado:
+- A proxima pagina carrega automaticamente, sem botao `Carregar mais`.
+- Posts nao aparecem duplicados.
+- Ao fim do feed, aparece a mensagem `Voce chegou ao fim do feed.`
+
+## 9. PWA
+
+1. Abra a aplicacao em HTTPS ou localhost.
+2. Abra DevTools > Application.
+3. Confira `Manifest` e `Service Workers`.
+
+Resultado esperado:
+- O manifest aparece como `Instagram Clone`.
+- O service worker `/service-worker.js` esta registrado e ativo.
+
+## 10. Push notifications
+
+Pre-requisitos:
+- Execute `backend/supabase-fase4.sql`.
+- Configure no backend: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` e `VAPID_SUBJECT`.
+- Use HTTPS em producao ou localhost em desenvolvimento.
+
+Como testar:
+1. Entre como Usuario A.
+2. Abra configuracoes e clique em `Ativar notificacoes`.
+3. Aceite a permissao do navegador.
+4. Feche a aba do Usuario A ou deixe A offline.
+5. Entre como Usuario B e envie uma mensagem para A.
+
+Resultado esperado:
+- O navegador do Usuario A recebe uma notificacao de nova mensagem.
+- Ao clicar na notificacao, a aplicacao abre a conversa com o Usuario B.

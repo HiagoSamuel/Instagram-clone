@@ -1,8 +1,8 @@
 import api from './api'
 
-const getFeed = async ({ limit = 20, offset = 0 } = {}) => {
+const getFeed = async ({ limit = 20, offset = 0, before = null, cursor = false } = {}) => {
   const { data } = await api.get('/posts/feed', {
-    params: { limit, offset },
+    params: cursor ? { limit, before, cursor: 1 } : { limit, offset },
   })
   return data
 }

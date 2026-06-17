@@ -2,8 +2,22 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
+import api from '../../services/api'
 import { userService } from '../../services/userService'
 import './SettingsMenu.css'
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = window.atob(base64)
+  const outputArray = new Uint8Array(rawData.length)
+
+  for (let i = 0; i < rawData.length; i += 1) {
+    outputArray[i] = rawData.charCodeAt(i)
+  }
+
+  return outputArray
+}
 
 export default function SettingsMenu() {
   const { user, setUser } = useAuth()
@@ -18,6 +32,8 @@ export default function SettingsMenu() {
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
   const [loading, setLoading] = useState(false)
+  const [pushStatus, setPushStatus] = useState('idle')
+  const [pushEnabled, setPushEnabled] = useState(false)
   const [panelPosition, setPanelPosition] = useState(() => {
     if (typeof window !== 'undefined') {
       return {
@@ -39,6 +55,15 @@ export default function SettingsMenu() {
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('blockedWords') || '[]')
     setBlockedWords(stored)
+  }, [])
+
+  useEffect(() => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+
+    navigator.serviceWorker.ready
+      .then((registration) => registration.pushManager.getSubscription())
+      .then((subscription) => setPushEnabled(Boolean(subscription)))
+      .catch(() => setPushEnabled(false))
   }, [])
 
   const handleAvatarChange = (event) => {
@@ -127,6 +152,63 @@ export default function SettingsMenu() {
     }
   }
 
+  const handleEnablePush = async () => {
+    setPushStatus('loading')
+    setError('')
+    setInfo('')
+
+    try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+        throw new Error('Este navegador nao suporta notificacoes push.')
+      }
+
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') {
+        throw new Error('Permissao de notificacao negada.')
+      }
+
+      const { data: config } = await api.get('/push/config')
+      if (!config.enabled || !config.publicKey) {
+        throw new Error('Push ainda nao configurado no backend. Defina as chaves VAPID.')
+      }
+
+      const registration = await navigator.serviceWorker.ready
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(config.publicKey),
+      })
+
+      await api.post('/push/subscribe', { subscription })
+      setPushEnabled(true)
+      setPushStatus('idle')
+      setInfo('Notificacoes ativadas neste navegador.')
+    } catch (err) {
+      setPushStatus('idle')
+      setError(err.response?.data?.error || err.message)
+    }
+  }
+
+  const handleDisablePush = async () => {
+    setPushStatus('loading')
+    setError('')
+    setInfo('')
+
+    try {
+      const registration = await navigator.serviceWorker.ready
+      const subscription = await registration.pushManager.getSubscription()
+      if (subscription) {
+        await api.post('/push/unsubscribe', { endpoint: subscription.endpoint })
+        await subscription.unsubscribe()
+      }
+      setPushEnabled(false)
+      setInfo('Notificacoes desativadas neste navegador.')
+    } catch (err) {
+      setError(err.response?.data?.error || err.message)
+    } finally {
+      setPushStatus('idle')
+    }
+  }
+
   if (!user) return null
 
   return (
@@ -170,6 +252,25 @@ export default function SettingsMenu() {
               onClick={toggleTheme}
             >
               {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+            </button>
+          </section>
+
+          <section className="settings-section">
+            <h4>Notificacoes</h4>
+            <p className="settings-note">
+              Receba aviso de nova mensagem quando voce estiver offline.
+            </p>
+            <button
+              type="button"
+              className="settings-toggle"
+              onClick={pushEnabled ? handleDisablePush : handleEnablePush}
+              disabled={pushStatus === 'loading'}
+            >
+              {pushStatus === 'loading'
+                ? 'Atualizando...'
+                : pushEnabled
+                  ? 'Desativar notificacoes'
+                  : 'Ativar notificacoes'}
             </button>
           </section>
 

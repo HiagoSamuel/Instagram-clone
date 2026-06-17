@@ -7,7 +7,8 @@ Auditoria atualizada em: 17/06/2026
 - Fase 1: 9/10 itens prontos
 - Fase 2: 23/23 itens prontos
 - Fase 3: 8/8 itens prontos
-- Progresso geral estimado: 95%
+- Fase 4: 10/10 itens implementados
+- Progresso geral estimado: 98%
 
 ## Pronto
 
@@ -54,16 +55,32 @@ Auditoria atualizada em: 17/06/2026
 - Estados de conexao: offline, reconectando e sincronizado.
 - Ressincronizacao basica ao reconectar.
 
+### Fase 4
+
+- Busca unificada por usuarios, posts e hashtags.
+- Links clicaveis de hashtags nas legendas.
+- Pagina de hashtag com posts relacionados.
+- Persistencia de hashtags em `hashtags` e `post_hashtags`.
+- Busca full-text por legenda com fallback para `ILIKE`.
+- Pagina Explorar com posts publicos fora do circulo de amigos.
+- Hashtags em alta com cache TTL no backend.
+- Feed com paginacao por cursor.
+- Infinite scroll com `IntersectionObserver`.
+- PWA com manifest e service worker.
+- Web Push com assinaturas persistidas e envio para destinatarios offline.
+
 ## Parcial
 
 - Testes automatizados: existe uma base com `node --test` para regras criticas de mensagens, mas ainda falta ampliar para controllers de amizade, posts e fluxos HTTP completos.
 - Reconexao: o chat aberto busca mensagens perdidas ao reconectar; uma melhoria futura seria ressincronizar tambem a lista de conversas inteira quando o app volta de uma queda longa.
+- Push notifications: a infraestrutura esta pronta, mas o envio real depende de `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` e `VAPID_SUBJECT` configuradas no backend e `backend/supabase-fase4.sql` executado no Supabase.
 
 ## Falta
 
 - Testes de integracao reais com Supabase/local test database.
 - Teste automatizado end-to-end de Socket.io com dois clientes autenticados.
 - Pipeline de CI para rodar `npm test` e `npm run build` automaticamente.
+- UI para escolher se um post e publico ou apenas para amigos.
 
 ## Analise do WebSocket
 
@@ -74,5 +91,5 @@ O projeto usa um desenho bom para tempo real: o backend autentica cada socket co
 1. Ampliar testes automatizados para amizade, posts e comentarios.
 2. Criar teste end-to-end de Socket.io com dois clientes fake autenticados.
 3. Adicionar CI para validar build e testes a cada push.
-4. Melhorar ressincronizacao global apos reconexao longa.
-5. Adicionar indicadores visuais de mensagem lida/entregue dentro do chat.
+4. Adicionar controle de privacidade por post (`publico` / `somente amigos`).
+5. Gerar chaves VAPID de producao e validar push em HTTPS.
