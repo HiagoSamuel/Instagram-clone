@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "check:fase2": "node scripts/check_fase2_tables.js"
+    "check:fase2": "node scripts/check_fase2_tables.js",
+    "test": "node --test"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.0.0",

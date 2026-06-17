@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Avatar from '../components/Avatar/Avatar'
+import { useSocket } from '../context/SocketContext'
 import api from '../services/api'
 
 export default function ConversationsPage() {
+  const { socket, setUnreadMessageCount } = useSocket()
   const [conversations, setConversations] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -12,6 +14,31 @@ export default function ConversationsPage() {
       .then(({ data }) => setConversations(data))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (!socket) return undefined
+
+    const handleConversationUpdated = (updated) => {
+      if (!updated?.conversation_id) return
+
+      setConversations((current) => {
+        const withoutUpdated = current.filter(
+          (conversation) => conversation.conversation_id !== updated.conversation_id
+        )
+        return [updated, ...withoutUpdated]
+      })
+
+      if (typeof updated.unread_total === 'number') {
+        setUnreadMessageCount(updated.unread_total)
+      }
+    }
+
+    socket.on('conversation_updated', handleConversationUpdated)
+
+    return () => {
+      socket.off('conversation_updated', handleConversationUpdated)
+    }
+  }, [socket, setUnreadMessageCount])
 
   return (
     <main className="page-shell">

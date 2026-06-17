@@ -6,6 +6,7 @@ import { postService } from '../../services/postService'
 import PostCard from '../../components/PostCard/PostCard'
 import CreatePostModal from '../../components/CreatePostModal/CreatePostModal'
 import SettingsMenu from '../../components/SettingsMenu/SettingsMenu'
+import MessagesNavLink from '../../components/MessagesNavLink'
 import api from '../../services/api'
 
 const FEED_PAGE_SIZE = 20
@@ -58,14 +59,35 @@ export default function HomePage() {
       setPosts((current) => current.filter((post) => post.id !== postId))
     }
 
+    const updatePostLikeState = ({ postId, userId, likes_count }, likedByActor) => {
+      setPosts((current) =>
+        current.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                likes_count,
+                liked_by_me: userId === user?.id ? likedByActor : post.liked_by_me,
+              }
+            : post
+        )
+      )
+    }
+
+    const handlePostLiked = (payload) => updatePostLikeState(payload, true)
+    const handlePostUnliked = (payload) => updatePostLikeState(payload, false)
+
     socket.on('new_post', handleNewPost)
     socket.on('post_deleted', handlePostDeleted)
+    socket.on('post_liked', handlePostLiked)
+    socket.on('post_unliked', handlePostUnliked)
 
     return () => {
       socket.off('new_post', handleNewPost)
       socket.off('post_deleted', handlePostDeleted)
+      socket.off('post_liked', handlePostLiked)
+      socket.off('post_unliked', handlePostUnliked)
     }
-  }, [socket])
+  }, [socket, user?.id])
 
   const loadMorePosts = async () => {
     if (loadingMore || !hasMorePosts) return
@@ -144,9 +166,7 @@ export default function HomePage() {
             Solicitacoes
             {pendingCount > 0 && <span className="nav-badge">{pendingCount}</span>}
           </Link>
-          <Link to="/conversations" className="button button-secondary">
-            Mensagens
-          </Link>
+          <MessagesNavLink />
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}

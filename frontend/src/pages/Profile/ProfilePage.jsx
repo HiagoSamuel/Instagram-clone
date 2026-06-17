@@ -6,6 +6,7 @@ import { postService } from '../../services/postService'
 import { userService } from '../../services/userService'
 import Avatar, { DEFAULT_AVATAR_SRC } from '../../components/Avatar/Avatar'
 import FriendButton from '../../components/FriendButton'
+import MessagesNavLink from '../../components/MessagesNavLink'
 import PostCard from '../../components/PostCard/PostCard'
 import './ProfilePage.css'
 
@@ -75,14 +76,35 @@ export default function ProfilePage() {
       setPosts((current) => current.filter((post) => post.id !== postId))
     }
 
+    const updatePostLikeState = ({ postId, userId, likes_count }, likedByActor) => {
+      setPosts((current) =>
+        current.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                likes_count,
+                liked_by_me: userId === currentUser?.id ? likedByActor : post.liked_by_me,
+              }
+            : post
+        )
+      )
+    }
+
+    const handlePostLiked = (payload) => updatePostLikeState(payload, true)
+    const handlePostUnliked = (payload) => updatePostLikeState(payload, false)
+
     socket.on('new_post', handleNewPost)
     socket.on('post_deleted', handlePostDeleted)
+    socket.on('post_liked', handlePostLiked)
+    socket.on('post_unliked', handlePostUnliked)
 
     return () => {
       socket.off('new_post', handleNewPost)
       socket.off('post_deleted', handlePostDeleted)
+      socket.off('post_liked', handlePostLiked)
+      socket.off('post_unliked', handlePostUnliked)
     }
-  }, [socket, profile?.id, canViewPosts])
+  }, [socket, profile?.id, canViewPosts, currentUser?.id])
 
   const handleLikeToggle = async (postId, liked) => {
     try {
@@ -170,6 +192,7 @@ export default function ProfilePage() {
 
         <div className="profile-actions">
           <Link to="/" className="button button-secondary">Voltar para o feed</Link>
+          <MessagesNavLink />
           {isOwnProfile && (
             <button className="button button-primary" onClick={openEdit}>
               Editar meu perfil

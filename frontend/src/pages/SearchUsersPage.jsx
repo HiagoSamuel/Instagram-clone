@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Avatar from '../components/Avatar/Avatar'
+import MessagesNavLink from '../components/MessagesNavLink'
 import api from '../services/api'
 
 export default function SearchUsersPage() {
@@ -40,7 +41,10 @@ export default function SearchUsersPage() {
           <h1>Buscar usuarios</h1>
           <p>Encontre pessoas para adicionar e conversar.</p>
         </div>
-        <Link to="/" className="button button-secondary">Feed</Link>
+        <div className="page-header-actions">
+          <Link to="/" className="button button-secondary">Feed</Link>
+          <MessagesNavLink />
+        </div>
       </header>
 
       <div className="search-panel">

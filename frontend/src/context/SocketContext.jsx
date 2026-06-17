@@ -1,9 +1,17 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
-import { API_BASE_URL, handleAuthExpired } from '../services/api'
+import api, { API_BASE_URL, handleAuthExpired } from '../services/api'
 import { useAuth } from './AuthContext'
 
-const SocketContext = createContext({ socket: null, isConnected: false })
+const SocketContext = createContext({
+  socket: null,
+  isConnected: false,
+  connectionStatus: 'idle',
+  resyncVersion: 0,
+  unreadMessageCount: 0,
+  refreshUnreadMessageCount: async () => 0,
+  setUnreadMessageCount: () => {},
+})
 
 function getSocketUrl() {
   return API_BASE_URL.replace(/\/api$/, '')
@@ -12,7 +20,23 @@ function getSocketUrl() {
 export function SocketProvider({ children }) {
   const { user } = useAuth()
   const socketRef = useRef(null)
+  const statusTimerRef = useRef(null)
   const [isConnected, setIsConnected] = useState(false)
+  const [connectionStatus, setConnectionStatus] = useState('idle')
+  const [resyncVersion, setResyncVersion] = useState(0)
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0)
+
+  const refreshUnreadMessageCount = async () => {
+    if (!localStorage.getItem('token')) {
+      setUnreadMessageCount(0)
+      return 0
+    }
+
+    const { data } = await api.get('/messages/unread-count')
+    const nextCount = data.unread_count || 0
+    setUnreadMessageCount(nextCount)
+    return nextCount
+  }
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -20,8 +44,12 @@ export function SocketProvider({ children }) {
       socketRef.current?.disconnect()
       socketRef.current = null
       setIsConnected(false)
+      setConnectionStatus('idle')
+      setUnreadMessageCount(0)
       return undefined
     }
+
+    refreshUnreadMessageCount().catch(() => setUnreadMessageCount(0))
 
     const socket = io(getSocketUrl(), {
       auth: { token },
@@ -29,8 +57,46 @@ export function SocketProvider({ children }) {
     })
 
     socketRef.current = socket
-    socket.on('connect', () => setIsConnected(true))
-    socket.on('disconnect', () => setIsConnected(false))
+    const markSynced = async () => {
+      window.clearTimeout(statusTimerRef.current)
+      await refreshUnreadMessageCount().catch(() => {})
+      setResyncVersion((version) => version + 1)
+      setConnectionStatus('synced')
+      statusTimerRef.current = window.setTimeout(() => {
+        setConnectionStatus('online')
+      }, 1800)
+    }
+
+    const handleConnect = () => {
+      setIsConnected(true)
+      markSynced()
+    }
+
+    const handleDisconnect = () => {
+      window.clearTimeout(statusTimerRef.current)
+      setIsConnected(false)
+      setConnectionStatus('offline')
+    }
+
+    const handleReconnectAttempt = () => {
+      window.clearTimeout(statusTimerRef.current)
+      setConnectionStatus('reconnecting')
+    }
+
+    const handleReconnect = () => {
+      setIsConnected(true)
+      markSynced()
+    }
+
+    socket.on('connect', handleConnect)
+    socket.on('disconnect', handleDisconnect)
+    socket.io.on('reconnect_attempt', handleReconnectAttempt)
+    socket.io.on('reconnect', handleReconnect)
+    socket.on('conversation_updated', (conversation) => {
+      if (typeof conversation?.unread_total === 'number') {
+        setUnreadMessageCount(conversation.unread_total)
+      }
+    })
     socket.on('connect_error', (error) => {
       setIsConnected(false)
       if (error.message === 'Unauthorized') {
@@ -39,17 +105,32 @@ export function SocketProvider({ children }) {
     })
 
     return () => {
-      socket.off('connect')
-      socket.off('disconnect')
+      window.clearTimeout(statusTimerRef.current)
+      socket.off('connect', handleConnect)
+      socket.off('disconnect', handleDisconnect)
+      socket.io.off('reconnect_attempt', handleReconnectAttempt)
+      socket.io.off('reconnect', handleReconnect)
+      socket.off('conversation_updated')
       socket.off('connect_error')
       socket.disconnect()
       socketRef.current = null
       setIsConnected(false)
+      setConnectionStatus('idle')
     }
   }, [user])
 
   return (
-    <SocketContext.Provider value={{ socket: socketRef.current, isConnected }}>
+    <SocketContext.Provider
+      value={{
+        socket: socketRef.current,
+        isConnected,
+        connectionStatus,
+        resyncVersion,
+        unreadMessageCount,
+        refreshUnreadMessageCount,
+        setUnreadMessageCount,
+      }}
+    >
       {children}
     </SocketContext.Provider>
   )

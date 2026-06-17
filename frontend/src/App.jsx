@@ -10,6 +10,7 @@ import FriendRequestsPage from './pages/FriendRequestsPage'
 import ConversationsPage from './pages/ConversationsPage'
 import ChatPage from './pages/ChatPage'
 import SearchUsersPage from './pages/SearchUsersPage'
+import SocketStatusBanner from './components/SocketStatusBanner'
 import './App.css'
 
 function RequireAuth({ children }) {
@@ -31,6 +32,7 @@ function App() {
     <AuthProvider>
       <ThemeProvider>
         <SocketProvider>
+          <SocketStatusBanner />
           <BrowserRouter>
             <Routes>
               <Route path="/login" element={<LoginPage />} />

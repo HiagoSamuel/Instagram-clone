@@ -9,7 +9,7 @@ const postRoutes = require('./routes/posts')
 const friendshipRoutes = require('./routes/friendships')
 const messageRoutes = require('./routes/messages')
 const userRoutes = require('./routes/users')
-const { createMessage } = require('./controllers/messageController')
+const { createMessage, buildConversationUpdate } = require('./controllers/messageController')
 
 const app = express()
 
@@ -73,7 +73,12 @@ io.on('connection', (socket) => {
   socket.on('send_message', async (data = {}, callback) => {
     try {
       const message = await createMessage(userId, data.receiverId, data.content)
+      const receiverConversation = await buildConversationUpdate(data.receiverId, userId, message)
+      const senderConversation = await buildConversationUpdate(userId, data.receiverId, message)
+
       io.to(`user:${data.receiverId}`).emit('new_message', message)
+      io.to(`user:${data.receiverId}`).emit('conversation_updated', receiverConversation)
+      io.to(`user:${userId}`).emit('conversation_updated', senderConversation)
       socket.emit('message_sent', message)
       if (typeof callback === 'function') callback({ ok: true, message })
     } catch (error) {

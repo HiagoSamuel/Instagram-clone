@@ -95,6 +95,31 @@
   color: var(--text);
 }
 
+.socket-status-banner {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  width: 100%;
+  padding: 7px 16px;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-inverse);
+  background: var(--primary);
+}
+
+.socket-status-banner.offline {
+  background: var(--danger);
+}
+
+.socket-status-banner.reconnecting {
+  background: #ca8a04;
+}
+
+.socket-status-banner.synced {
+  background: #16a34a;
+}
+
 .home-header {
   display: flex;
   flex-wrap: wrap;
@@ -364,6 +389,14 @@
   justify-content: space-between;
   gap: 18px;
   margin-bottom: 24px;
+}
+
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .page-header p {

@@ -8,7 +8,7 @@ import api from '../services/api'
 export default function ChatPage() {
   const { friendId } = useParams()
   const { user } = useAuth()
-  const { socket, isConnected } = useSocket()
+  const { socket, isConnected, resyncVersion, setUnreadMessageCount } = useSocket()
   const [friend, setFriend] = useState(null)
   const [messages, setMessages] = useState([])
   const [inputText, setInputText] = useState('')
@@ -17,6 +17,13 @@ export default function ChatPage() {
   const [error, setError] = useState('')
   const lastMessageTimeRef = useRef(null)
   const messagesEndRef = useRef(null)
+
+  const markCurrentConversationAsRead = async () => {
+    const { data } = await api.put(`/messages/${friendId}/read`)
+    if (typeof data?.unread_count === 'number') {
+      setUnreadMessageCount(data.unread_count)
+    }
+  }
 
   const appendMessages = (incoming) => {
     const list = Array.isArray(incoming) ? incoming : [incoming]
@@ -45,7 +52,7 @@ export default function ChatPage() {
         setMessages(history)
         lastMessageTimeRef.current = history.at(-1)?.created_at || new Date(0).toISOString()
         setFriend(friendData)
-        await api.put(`/messages/${friendId}/read`)
+        await markCurrentConversationAsRead()
       } catch (err) {
         setError(err.response?.data?.error || 'Erro ao carregar conversa.')
       } finally {
@@ -70,7 +77,7 @@ export default function ChatPage() {
 
       if (belongsToConversation) {
         appendMessages(message)
-        api.put(`/messages/${friendId}/read`).catch(() => {})
+        markCurrentConversationAsRead().catch(() => {})
       }
     }
 
@@ -92,7 +99,7 @@ export default function ChatPage() {
         const { data } = await api.get(`/messages/${friendId}/new?after=${after}`)
         appendMessages(data)
         if (data.length > 0) {
-          api.put(`/messages/${friendId}/read`).catch(() => {})
+          markCurrentConversationAsRead().catch(() => {})
         }
       } catch (err) {
         setError(err.response?.data?.error || 'Erro ao buscar mensagens novas.')
@@ -102,6 +109,25 @@ export default function ChatPage() {
     const intervalId = window.setInterval(pollNewMessages, 30000)
     return () => window.clearInterval(intervalId)
   }, [friendId, isConnected, loading])
+
+  useEffect(() => {
+    if (loading || resyncVersion === 0) return
+
+    const syncMissedMessages = async () => {
+      try {
+        const after = encodeURIComponent(lastMessageTimeRef.current || new Date(0).toISOString())
+        const { data } = await api.get(`/messages/${friendId}/new?after=${after}`)
+        appendMessages(data)
+        if (data.length > 0) {
+          markCurrentConversationAsRead().catch(() => {})
+        }
+      } catch (_err) {
+        // A tela mantem o fallback de polling; se esta tentativa falhar, a proxima rodada recupera.
+      }
+    }
+
+    syncMissedMessages()
+  }, [friendId, loading, resyncVersion])
 
   const sendMessage = async (event) => {
     event.preventDefault()

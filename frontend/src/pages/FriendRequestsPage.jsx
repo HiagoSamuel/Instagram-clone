@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Avatar from '../components/Avatar/Avatar'
+import MessagesNavLink from '../components/MessagesNavLink'
 import api from '../services/api'
 
 export default function FriendRequestsPage() {
@@ -36,7 +37,10 @@ export default function FriendRequestsPage() {
           <h1>Solicitacoes</h1>
           <p>Pedidos de amizade recebidos.</p>
         </div>
-        <Link to="/" className="button button-secondary">Feed</Link>
+        <div className="page-header-actions">
+          <Link to="/" className="button button-secondary">Feed</Link>
+          <MessagesNavLink />
+        </div>
       </header>
 
       {loading ? (

@@ -29,6 +29,51 @@ async function ensureFriends(userId, friendId, res) {
 
 exports.getConversationId = getConversationId
 
+async function getUnreadCountForUser(userId) {
+  const { count, error } = await supabase
+    .from('messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('receiver_id', userId)
+    .is('read_at', null)
+
+  if (error) throw error
+  return count || 0
+}
+
+async function getConversationUnreadCount(userId, conversationId) {
+  const { count, error } = await supabase
+    .from('messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('conversation_id', conversationId)
+    .eq('receiver_id', userId)
+    .is('read_at', null)
+
+  if (error) throw error
+  return count || 0
+}
+
+async function getUserSummary(userId) {
+  const { data, error } = await supabase
+    .from('users')
+    .select('id, username, full_name, avatar_url')
+    .eq('id', userId)
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+exports.buildConversationUpdate = async (viewerId, otherUserId, message) => ({
+  conversation_id: message.conversation_id,
+  last_message: message,
+  other_user_id: otherUserId,
+  unread_count: await getConversationUnreadCount(viewerId, message.conversation_id),
+  unread_total: await getUnreadCountForUser(viewerId),
+  user: await getUserSummary(otherUserId),
+})
+
+exports.getUnreadCountForUser = getUnreadCountForUser
+
 exports.createMessage = async (senderId, receiverId, content) => {
   const cleanContent = (content || '').trim()
   if (!cleanContent) {
@@ -165,6 +210,15 @@ exports.listConversations = async (req, res) => {
   })))
 }
 
+exports.getUnreadCount = async (req, res) => {
+  try {
+    const unread_count = await getUnreadCountForUser(req.user.userId)
+    return res.json({ unread_count })
+  } catch (error) {
+    return res.status(500).json({ error: error.message || 'Erro ao buscar mensagens nao lidas.' })
+  }
+}
+
 exports.markAsRead = async (req, res) => {
   const userId = req.user.userId
   const { friendId } = req.params
@@ -177,5 +231,11 @@ exports.markAsRead = async (req, res) => {
     .is('read_at', null)
 
   if (error) return res.status(500).json({ error: error.message })
-  return res.status(204).send()
+
+  try {
+    const unread_count = await getUnreadCountForUser(userId)
+    return res.json({ unread_count })
+  } catch (countError) {
+    return res.status(500).json({ error: countError.message || 'Erro ao atualizar leitura.' })
+  }
 }

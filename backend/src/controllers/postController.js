@@ -90,6 +90,16 @@ async function emitPostEvent(req, eventName, userId, payload) {
   })
 }
 
+async function getPostLikesCount(postId) {
+  const { count, error } = await supabase
+    .from('likes')
+    .select('id', { count: 'exact', head: true })
+    .eq('post_id', postId)
+
+  if (error) throw error
+  return count || 0
+}
+
 function parsePagination(query) {
   const rawLimit = Number.parseInt(query.limit, 10)
   const rawOffset = Number.parseInt(query.offset, 10)
@@ -343,6 +353,16 @@ exports.likePost = async (req, res) => {
   const { userId } = req.user
   const { id } = req.params
 
+  const { data: post, error: postError } = await supabase
+    .from('posts')
+    .select('id, user_id')
+    .eq('id', id)
+    .single()
+
+  if (postError || !post) {
+    return res.status(404).json({ error: 'Post nao encontrado' })
+  }
+
   const { error } = await supabase
     .from('likes')
     .insert({ user_id: userId, post_id: id })
@@ -351,12 +371,25 @@ exports.likePost = async (req, res) => {
     return res.status(500).json({ error: 'Erro ao curtir post' })
   }
 
-  return res.status(201).json({ message: 'Post curtido' })
+  const likes_count = await getPostLikesCount(id)
+  await emitPostEvent(req, 'post_liked', post.user_id, { postId: id, userId, likes_count })
+
+  return res.status(201).json({ message: 'Post curtido', likes_count })
 }
 
 exports.unlikePost = async (req, res) => {
   const { userId } = req.user
   const { id } = req.params
+
+  const { data: post, error: postError } = await supabase
+    .from('posts')
+    .select('id, user_id')
+    .eq('id', id)
+    .single()
+
+  if (postError || !post) {
+    return res.status(404).json({ error: 'Post nao encontrado' })
+  }
 
   const { error } = await supabase
     .from('likes')
@@ -368,7 +401,10 @@ exports.unlikePost = async (req, res) => {
     return res.status(500).json({ error: 'Erro ao remover curtida' })
   }
 
-  return res.status(204).send()
+  const likes_count = await getPostLikesCount(id)
+  await emitPostEvent(req, 'post_unliked', post.user_id, { postId: id, userId, likes_count })
+
+  return res.json({ message: 'Curtida removida', likes_count })
 }
 
 exports.deletePost = async (req, res) => {
