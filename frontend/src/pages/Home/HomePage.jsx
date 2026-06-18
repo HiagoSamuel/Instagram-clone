@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+﻿import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
@@ -171,72 +171,76 @@ export default function HomePage() {
 
   return (
     <div className="home-page">
-      <header className="home-header" style={{ position: 'relative', zIndex: 100 }}>
-        <div className="home-header-actions">
-          <SettingsMenu />
-        </div>
-        <div>
-          <h1>Bem-vindo, {user?.username || 'usuário'}</h1>
-          <p>Feed dos seus amigos e suas fotos.</p>
-        </div>
-
-        <div className="home-actions" style={{ position: 'relative', zIndex: 101 }}>
-          <Link to={`/profile/${user?.username}`} className="button button-secondary">
-            Meu perfil
-          </Link>
-          <Link to="/search" className="button button-secondary">
-            Buscar
-          </Link>
-          <Link to="/explore" className="button button-secondary">
-            Explorar
-          </Link>
-          <Link to="/requests" className="button button-secondary nav-button-with-badge">
-            Solicitacoes
-            {pendingCount > 0 && <span className="nav-badge">{pendingCount}</span>}
-          </Link>
-          <MessagesNavLink />
-          <NotificationsNavLink />
-          <button
-            type="button"
-            onClick={() => setIsModalOpen(true)}
-            className="button button-primary"
-            style={{ cursor: 'pointer' }}
-          >
-            Novo post
-          </button>
-          <button onClick={logout} className="button button-secondary">
-            Sair
-          </button>
-        </div>
-      </header>
-
-      <StoriesBar />
-
-      {loading ? (
-        <p>Carregando feed...</p>
-      ) : error ? (
-        <p>{error}</p>
-      ) : posts.length === 0 ? (
-        <p>Não há posts para mostrar ainda.</p>
-      ) : (
-        <>
-          <div className="feed-list">
-            {posts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                onLikeToggle={handleLikeToggle}
-                onPostDelete={handlePostDelete}
-              />
-            ))}
+      <div className="ig-feed-layout">
+        <section className="ig-feed-column" aria-label="Feed">
+          <div className="ig-feed-toolbar">
+            <SettingsMenu />
+            <button type="button" onClick={() => setIsModalOpen(true)} className="ig-create-post-button">
+              Novo post
+            </button>
           </div>
-          <div ref={loadMoreRef} className="feed-load-more">
-            {loadingMore && <span>Carregando mais posts...</span>}
-            {!hasMorePosts && <span>Voce chegou ao fim do feed.</span>}
-          </div>
-        </>
-      )}
 
+          <StoriesBar />
+
+          {loading ? (
+            <p className="ig-feed-state">Carregando feed...</p>
+          ) : error ? (
+            <p className="ig-feed-state ig-feed-error">{error}</p>
+          ) : posts.length === 0 ? (
+            <p className="ig-feed-state">Não há posts para mostrar ainda.</p>
+          ) : (
+            <>
+              <div className="feed-list">
+                {posts.map((post) => (
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    onLikeToggle={handleLikeToggle}
+                    onPostDelete={handlePostDelete}
+                  />
+                ))}
+              </div>
+              <div ref={loadMoreRef} className="feed-load-more">
+                {loadingMore && <span>Carregando mais posts...</span>}
+                {!hasMorePosts && <span>Voce chegou ao fim do feed.</span>}
+              </div>
+            </>
+          )}
+        </section>
+
+        <aside className="ig-feed-aside" aria-label="Sugestões">
+          <div className="ig-current-user">
+            <Link to={`/profile/${user?.username}`} className="ig-current-user-avatar">
+              {user?.avatar_url ? <img src={user.avatar_url} alt={user.username} /> : <span>{user?.username?.[0] || 'U'}</span>}
+            </Link>
+            <div>
+              <strong>{user?.username || 'usuário'}</strong>
+              <span>{user?.full_name || 'Instagram Clone'}</span>
+            </div>
+            <button type="button" onClick={logout}>Sair</button>
+          </div>
+
+          <div className="ig-suggestions-header">
+            <strong>Sugestões para você</strong>
+            <Link to="/search">Ver tudo</Link>
+          </div>
+
+          <Link to="/requests" className="ig-suggestion-row">
+            <span className="ig-suggestion-avatar">+</span>
+            <div>
+              <strong>Solicitações</strong>
+              <span>{pendingCount > 0 ? `${pendingCount} pendente${pendingCount === 1 ? '' : 's'}` : 'Nenhuma pendente'}</span>
+            </div>
+          </Link>
+          <Link to="/explore" className="ig-suggestion-row">
+            <span className="ig-suggestion-avatar">#</span>
+            <div>
+              <strong>Explorar</strong>
+              <span>Descubra posts e hashtags</span>
+            </div>
+          </Link>
+        </aside>
+      </div>
       <CreatePostModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -245,3 +249,5 @@ export default function HomePage() {
     </div>
   )
 }
+
+

@@ -483,3 +483,206 @@
   max-height: 620px;
   background: #000;
 }
+
+.post-card {
+  overflow: visible;
+  border: 0;
+  border-bottom: 1px solid var(--ig-divider);
+  border-radius: 0;
+  background: var(--ig-bg);
+  box-shadow: none;
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  min-height: 50px;
+  gap: 10px;
+  padding: 8px 0 10px;
+}
+
+.post-author-link {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+}
+
+.post-author strong {
+  color: var(--ig-text);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.post-more-icon {
+  margin-left: auto;
+  color: var(--ig-text);
+}
+
+.post-delete-btn {
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
+  color: var(--ig-text);
+}
+
+.post-delete-btn:hover {
+  background: transparent;
+  color: var(--ig-danger);
+  transform: none;
+}
+
+.post-image {
+  overflow: hidden;
+  border: 1px solid var(--ig-border);
+  border-radius: 4px;
+  background: #000;
+}
+
+.post-image img,
+.post-image video {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.post-actions {
+  justify-content: flex-start;
+  gap: 14px;
+  padding: 12px 0 8px;
+}
+
+.post-action-btn {
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  color: var(--ig-text);
+  border-radius: 0;
+  font-size: 1rem;
+}
+
+.post-action-btn:hover {
+  opacity: 0.62;
+  transform: none;
+}
+
+.post-action-btn.is-liked {
+  color: var(--ig-danger);
+}
+
+.post-save-btn {
+  margin-left: auto;
+}
+
+.post-likes-count {
+  margin: 0;
+  padding: 0 0 8px;
+  color: var(--ig-text);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.post-caption {
+  padding: 0 0 6px;
+  color: var(--ig-text);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.post-caption strong {
+  color: var(--ig-text);
+  font-weight: 700;
+}
+
+.post-hashtag {
+  color: var(--ig-link);
+  font-weight: 400;
+}
+
+.post-comments-toggle {
+  padding: 0 0 8px;
+  color: var(--ig-text-muted);
+  font-size: 0.9rem;
+}
+
+.post-comments-toggle:hover {
+  color: var(--ig-text);
+}
+
+.post-comments {
+  gap: 8px;
+  padding: 8px 0 0;
+  border-top: 0;
+}
+
+.comments-list {
+  gap: 8px;
+}
+
+.comment-item {
+  gap: 8px;
+}
+
+.comment-avatar-link {
+  display: none;
+}
+
+.comment-header-row {
+  gap: 6px;
+}
+
+.comment-username,
+.comment-text {
+  color: var(--ig-text);
+  font-size: 0.88rem;
+}
+
+.comment-text {
+  margin-top: 0;
+}
+
+.comment-time {
+  color: var(--ig-text-muted);
+}
+
+.comment-form {
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0 0;
+  border-top: 0;
+}
+
+.comment-form > .avatar {
+  display: none;
+}
+
+.comment-input {
+  min-height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ig-text);
+}
+
+.comment-input:focus {
+  border-color: transparent;
+}
+
+.comment-submit-btn {
+  padding: 0;
+  background: transparent;
+  color: var(--ig-primary);
+}
+
+.comment-submit-btn:hover:not(:disabled) {
+  background: transparent;
+  color: var(--ig-primary-hover);
+}
+
+.post-time {
+  padding: 2px 0 18px;
+  color: var(--ig-text-muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}

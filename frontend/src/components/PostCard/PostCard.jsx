@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Bookmark, Heart, MessageCircle, MoreHorizontal, Send, Trash2 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
 import { apiUrl, handleAuthExpired } from '../../services/api'
@@ -32,7 +33,7 @@ async function apiRequest(method, url, body) {
 
   if (!token) {
     handleAuthExpired()
-    throw new Error('Sessao expirada. Faça login novamente.')
+    throw new Error('Sessao expirada. FaÃ§a login novamente.')
   }
 
   headers.Authorization = `Bearer ${token}`
@@ -48,7 +49,7 @@ async function apiRequest(method, url, body) {
     if (res.status === 401) {
       handleAuthExpired()
     }
-    throw new Error(err.error || 'Erro na requisição')
+    throw new Error(err.error || 'Erro na requisiÃ§Ã£o')
   }
 
   if (res.status === 204 || res.headers.get('content-length') === '0') return null
@@ -83,7 +84,7 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
   const [commentsLoaded, setCommentsLoaded] = useState(false)
   const [loadingComments, setLoadingComments] = useState(false)
   const [unreadCommentCount, setUnreadCommentCount] = useState(0)
-  // FIX: estado de erro para comentários (antes era silenciado)
+  // FIX: estado de erro para comentÃ¡rios (antes era silenciado)
   const [commentsError, setCommentsError]   = useState('')
 
   // new comment form
@@ -181,8 +182,8 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
         setLocalCommentsCount(data.length)
         setCommentsLoaded(true)
       } catch (err) {
-        // FIX: exibe erro ao usuário em vez de silenciar
-        setCommentsError('Não foi possível carregar os comentários.')
+        // FIX: exibe erro ao usuÃ¡rio em vez de silenciar
+        setCommentsError('NÃ£o foi possÃ­vel carregar os comentÃ¡rios.')
         console.error(err)
       } finally {
         setLoadingComments(false)
@@ -313,20 +314,10 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
             title="Apagar post"
             aria-label="Apagar post"
           >
-            <svg
-              className="post-delete-icon"
-              viewBox="0 0 64 64"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <path d="M22 16V10C22 7.8 23.8 6 26 6H38C40.2 6 42 7.8 42 10V16" />
-              <path d="M14 16H50" />
-              <path d="M18 16L21 56H43L46 16" />
-              <path d="M28 26V48" />
-              <path d="M36 26V48" />
-            </svg>
+            <Trash2 size={20} strokeWidth={2} />
           </button>
         )}
+        {!isOwner && <MoreHorizontal className="post-more-icon" size={22} strokeWidth={2} />}
       </div>
 
       {/* image */}
@@ -347,8 +338,12 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
 
       {/* actions */}
       <div className="post-actions">
-        <button className="post-action-btn" onClick={handleLikeClick}>
-          {localLiked ? '❤️' : '🤍'}
+        <button
+          className={`post-action-btn ${localLiked ? 'is-liked' : ''}`}
+          onClick={handleLikeClick}
+          aria-label="Curtir"
+        >
+          <Heart size={26} fill={localLiked ? 'currentColor' : 'none'} strokeWidth={2} />
         </button>
         <button
           className="post-action-btn post-comment-action-btn"
@@ -360,16 +355,22 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
               : 'Comentários'
           }
         >
-          <span aria-hidden="true">💬</span>
+          <MessageCircle size={26} strokeWidth={2} aria-hidden="true" />
           {unreadCommentCount > 0 && (
             <span className="post-comment-badge" aria-hidden="true">
               {unreadCommentLabel}
             </span>
           )}
         </button>
-        <span className="post-likes-count">{localLikesCount} curtidas</span>
+        <button className="post-action-btn" type="button" aria-label="Enviar">
+          <Send size={26} strokeWidth={2} />
+        </button>
+        <button className="post-action-btn post-save-btn" type="button" aria-label="Salvar">
+          <Bookmark size={26} strokeWidth={2} />
+        </button>
       </div>
 
+      <div className="post-likes-count">{localLikesCount} curtidas</div>
       {/* caption */}
       {post.caption && (
         <div className="post-caption">
@@ -394,7 +395,7 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
             <strong>{post.file_name || 'Arquivo anexado'}</strong>
             {(post.file_type || post.file_size) && (
               <small>
-                {[post.file_type, formatFileSize(post.file_size)].filter(Boolean).join(' · ')}
+                {[post.file_type, formatFileSize(post.file_size)].filter(Boolean).join(' Â· ')}
               </small>
             )}
           </span>
@@ -404,8 +405,8 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
       {/* comments toggle label */}
       <button className="post-comments-toggle" onClick={toggleComments}>
         {commentsOpen
-          ? `Ocultar comentários (${localCommentsCount})`
-          : `Ver comentários (${localCommentsCount})`}
+          ? `Ocultar comentÃ¡rios (${localCommentsCount})`
+          : `Ver comentÃ¡rios (${localCommentsCount})`}
       </button>
 
       {/* comments section */}
@@ -413,11 +414,11 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
         <div className="post-comments">
           {loadingComments && <p className="comments-loading">Carregando...</p>}
 
-          {/* FIX: exibe erro de carregamento de comentários */}
+          {/* FIX: exibe erro de carregamento de comentÃ¡rios */}
           {commentsError && <p className="comment-error">{commentsError}</p>}
 
           {!loadingComments && !commentsError && comments.length === 0 && (
-            <p className="comments-empty">Nenhum comentário ainda. Seja o primeiro!</p>
+            <p className="comments-empty">Nenhum comentÃ¡rio ainda. Seja o primeiro!</p>
           )}
 
           <ul className="comments-list">
@@ -438,15 +439,15 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
                       <button
                         className="comment-delete-btn"
                         onClick={() => handleDelete(c.id)}
-                        title="Excluir comentário"
+                        title="Excluir comentÃ¡rio"
                       >
-                        🗑
+                        ðŸ—‘
                       </button>
                     )}
                   </div>
                   {c.content && <p className="comment-text">{c.content}</p>}
                   {c.image_url && (
-                    <img src={c.image_url} alt="Imagem do comentário" className="comment-image" />
+                    <img src={c.image_url} alt="Imagem do comentÃ¡rio" className="comment-image" />
                   )}
                   {c.file_url && (
                     <a
@@ -465,7 +466,7 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
                         <strong>{c.file_name || 'Arquivo anexado'}</strong>
                         {(c.file_type || c.file_size) && (
                           <small>
-                            {[c.file_type, formatFileSize(c.file_size)].filter(Boolean).join(' · ')}
+                            {[c.file_type, formatFileSize(c.file_size)].filter(Boolean).join(' Â· ')}
                           </small>
                         )}
                       </span>
@@ -478,12 +479,12 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
 
           {/* new comment form */}
           <form className="comment-form" onSubmit={handleSubmit}>
-            <Avatar src={currentUser?.avatar_url} size={30} alt="Você" />
+            <Avatar src={currentUser?.avatar_url} size={30} alt="VocÃª" />
             <div className="comment-input-wrap">
               <input
                 type="text"
                 className="comment-input"
-                placeholder="Adicione um comentário..."
+                placeholder="Adicione um comentÃ¡rio..."
                 value={newText}
                 onChange={(e) => setNewText(e.target.value)}
                 maxLength={500}
@@ -492,14 +493,14 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
               {imagePreview && (
                 <div className="comment-img-preview">
                   <img src={imagePreview} alt="Preview" />
-                  <button type="button" className="comment-img-remove" onClick={clearImage}>✕</button>
+                  <button type="button" className="comment-img-remove" onClick={clearImage}>âœ•</button>
                 </div>
               )}
 
               {newAttachment && (
                 <div className="comment-file-preview">
                   <span className="comment-file-preview-name">{newAttachment.name}</span>
-                  <button type="button" className="comment-file-remove" onClick={clearAttachment}>✕</button>
+                  <button type="button" className="comment-file-remove" onClick={clearAttachment}>âœ•</button>
                 </div>
               )}
 
@@ -510,7 +511,7 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
                   onClick={() => imgInputRef.current.click()}
                   title="Adicionar foto"
                 >
-                  📷
+                  ðŸ“·
                 </button>
                 <input
                   ref={imgInputRef}
@@ -558,3 +559,5 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
     </article>
   )
 }
+
+

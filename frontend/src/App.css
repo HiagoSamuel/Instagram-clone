@@ -687,6 +687,170 @@
   right: 0;
 }
 
+.home-page {
+  min-height: 100vh;
+  padding: 28px 32px 48px;
+  background: var(--ig-bg);
+}
+
+.ig-feed-layout {
+  display: grid;
+  grid-template-columns: minmax(0, var(--ig-feed-width)) 320px;
+  justify-content: center;
+  gap: 64px;
+  width: min(100%, 940px);
+  margin: 0 auto;
+}
+
+.ig-feed-column {
+  min-width: 0;
+}
+
+.ig-feed-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-height: 42px;
+  margin-bottom: 10px;
+}
+
+.ig-create-post-button {
+  min-height: 32px;
+  padding: 0 14px;
+  border-radius: var(--ig-radius);
+  background: var(--ig-primary);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.feed-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.feed-load-more,
+.ig-feed-state {
+  display: flex;
+  justify-content: center;
+  padding: 22px 0;
+  color: var(--ig-text-muted);
+  font-size: 0.9rem;
+}
+
+.ig-feed-error {
+  color: var(--ig-danger);
+}
+
+.ig-feed-aside {
+  position: sticky;
+  top: 28px;
+  align-self: start;
+  padding-top: 8px;
+}
+
+.ig-current-user,
+.ig-suggestion-row,
+.ig-suggestions-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ig-current-user {
+  margin-bottom: 28px;
+}
+
+.ig-current-user-avatar,
+.ig-suggestion-avatar {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--ig-bg-elev);
+  color: var(--ig-text);
+  font-weight: 700;
+}
+
+.ig-current-user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ig-current-user div,
+.ig-suggestion-row div {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 2px;
+}
+
+.ig-current-user strong,
+.ig-suggestion-row strong {
+  color: var(--ig-text);
+  font-size: 0.88rem;
+}
+
+.ig-current-user span,
+.ig-suggestion-row span:not(.ig-suggestion-avatar) {
+  color: var(--ig-text-muted);
+  font-size: 0.82rem;
+}
+
+.ig-current-user button,
+.ig-suggestions-header a {
+  color: var(--ig-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ig-suggestions-header {
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.ig-suggestions-header strong {
+  color: var(--ig-text-muted);
+  font-size: 0.9rem;
+}
+
+.ig-suggestion-row {
+  min-height: 52px;
+}
+
+@media (max-width: 1160px) {
+  .ig-feed-layout {
+    grid-template-columns: minmax(0, var(--ig-feed-width));
+    width: min(100%, var(--ig-feed-width));
+  }
+
+  .ig-feed-aside {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .home-page {
+    padding: 0 0 24px;
+  }
+
+  .ig-feed-layout {
+    width: 100%;
+  }
+
+  .ig-feed-toolbar {
+    padding: 8px 12px 0;
+  }
+}
+
 .page-shell {
   min-height: 100vh;
   padding: 32px;
