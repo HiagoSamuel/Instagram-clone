@@ -1248,3 +1248,290 @@ button:disabled {
     padding: 22px;
   }
 }
+
+/* Instagram-like messages and notifications */
+.page-shell {
+  width: min(100%, 935px);
+  margin: 0 auto;
+  padding: 32px 24px 56px;
+  color: var(--ig-text);
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--ig-border);
+}
+
+.page-header h1 {
+  margin: 0;
+  color: var(--ig-text);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.page-header p {
+  margin: 6px 0 0;
+  color: var(--ig-text-muted);
+  font-size: 14px;
+}
+
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.conversation-list,
+.notifications-list {
+  overflow: hidden;
+  border: 1px solid var(--ig-border);
+  border-radius: 0;
+  background: var(--ig-bg);
+}
+
+.conversation-item,
+.notification-item {
+  box-shadow: none;
+  border: 0;
+  border-bottom: 1px solid var(--ig-divider);
+  border-radius: 0;
+  background: var(--ig-bg);
+  color: var(--ig-text);
+}
+
+.conversation-item:last-child,
+.notification-item:last-child {
+  border-bottom: 0;
+}
+
+.conversation-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  justify-content: stretch;
+  gap: 14px;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+.conversation-item:hover,
+.notification-item:hover {
+  background: var(--ig-bg-elev);
+}
+
+.conversation-item .avatar,
+.notification-item .avatar {
+  width: 56px;
+  height: 56px;
+}
+
+.conversation-item strong,
+.notification-body strong {
+  color: var(--ig-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.conversation-item span:not(.nav-badge),
+.notification-body span {
+  color: var(--ig-text-muted);
+  font-size: 14px;
+}
+
+.notifications-list {
+  max-width: 720px;
+}
+
+.notification-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+}
+
+.notification-item-unread {
+  background: color-mix(in srgb, var(--ig-primary) 8%, var(--ig-bg));
+}
+
+.notification-body {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.notification-body strong {
+  overflow-wrap: anywhere;
+}
+
+.notification-item .button {
+  min-height: 32px;
+  padding: 7px 12px;
+  font-size: 13px;
+}
+
+.chat-page {
+  width: min(100%, 760px);
+  min-height: calc(100vh - 24px);
+  margin: 0 auto;
+  padding: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  border-right: 1px solid var(--ig-border);
+  border-left: 1px solid var(--ig-border);
+  background: var(--ig-bg);
+  color: var(--ig-text);
+}
+
+.chat-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--ig-border);
+  background: var(--ig-bg);
+}
+
+.chat-header .button {
+  min-height: 34px;
+  padding: 8px 12px;
+}
+
+.chat-header .avatar {
+  width: 44px;
+  height: 44px;
+}
+
+.chat-header strong {
+  color: var(--ig-text);
+  font-size: 15px;
+}
+
+.chat-header span {
+  color: var(--ig-text-muted);
+  font-size: 12px;
+}
+
+.chat-messages {
+  min-height: 520px;
+  overflow-y: auto;
+  padding: 22px 16px;
+  gap: 8px;
+  background: var(--ig-bg);
+}
+
+.message-bubble {
+  max-width: min(72%, 430px);
+  padding: 8px 12px;
+  border-radius: 18px;
+  box-shadow: none;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.message-bubble p {
+  margin: 0;
+}
+
+.message-bubble time {
+  margin-top: 4px;
+  color: inherit;
+  font-size: 11px;
+  opacity: 0.68;
+}
+
+.message-bubble.mine {
+  border-bottom-right-radius: 5px;
+  background: var(--ig-primary);
+  color: #fff;
+}
+
+.message-bubble.theirs {
+  border: 1px solid var(--ig-border);
+  border-bottom-left-radius: 5px;
+  background: var(--ig-bg-elev);
+  color: var(--ig-text);
+}
+
+.chat-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--ig-border);
+  background: var(--ig-bg);
+}
+
+.chat-form input {
+  min-height: 42px;
+  border: 1px solid var(--ig-border);
+  border-radius: 999px;
+  background: var(--ig-bg);
+  color: var(--ig-text);
+}
+
+.chat-form input:focus {
+  border-color: var(--ig-text-muted);
+  outline: none;
+}
+
+.chat-form .button {
+  border-radius: 999px;
+}
+
+@media (max-width: 760px) {
+  .page-shell {
+    padding: 18px 14px 88px;
+  }
+
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .page-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .conversation-list,
+  .notifications-list,
+  .chat-page {
+    border-right: 0;
+    border-left: 0;
+  }
+
+  .notification-item {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .notification-item .button {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .chat-page {
+    width: 100%;
+    min-height: calc(100vh - 126px);
+  }
+
+  .chat-messages {
+    min-height: 420px;
+  }
+
+  .chat-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
