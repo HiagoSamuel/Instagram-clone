@@ -13,6 +13,7 @@ const searchRoutes = require('./routes/search')
 const exploreRoutes = require('./routes/explore')
 const pushRoutes = require('./routes/push')
 const notificationRoutes = require('./routes/notifications')
+const storyRoutes = require('./routes/stories')
 const { createMessage, buildConversationUpdate } = require('./controllers/messageController')
 const { sendPushToUser } = require('./services/pushService')
 
@@ -45,6 +46,7 @@ app.use('/api/search', searchRoutes)
 app.use('/api/explore', exploreRoutes)
 app.use('/api/push', pushRoutes)
 app.use('/api/notifications', notificationRoutes)
+app.use('/api/stories', storyRoutes)
 app.use('/api', messageRoutes)
 
 app.get('/api/health', (req, res) => {

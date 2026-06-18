@@ -408,6 +408,128 @@
   font-size: 0.86rem;
 }
 
+.stories-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 12px 0 20px;
+}
+
+.story-create-button,
+.story-pill {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  min-width: 76px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.story-create-button span {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  font-size: 1.5rem;
+}
+
+.story-pill img {
+  border: 3px solid var(--border);
+}
+
+.story-pill-new img {
+  border-color: var(--primary);
+}
+
+.story-pill-seen img {
+  border-color: var(--text-muted);
+}
+
+.stories-error {
+  color: var(--danger);
+  font-size: 0.9rem;
+}
+
+.story-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.92);
+}
+
+.story-viewer-progress {
+  position: absolute;
+  top: 14px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  gap: 6px;
+}
+
+.story-viewer-progress span {
+  height: 3px;
+  flex: 1;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.story-viewer-progress .story-progress-active {
+  background: white;
+}
+
+.story-viewer-header {
+  position: absolute;
+  top: 28px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+}
+
+.story-viewer-header button {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: white;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.story-viewer-media {
+  max-width: min(420px, 92vw);
+  max-height: 82vh;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.story-viewer-hit {
+  position: absolute;
+  top: 80px;
+  bottom: 0;
+  width: 40%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.story-viewer-prev {
+  left: 0;
+}
+
+.story-viewer-next {
+  right: 0;
+}
+
 .page-shell {
   min-height: 100vh;
   padding: 32px;

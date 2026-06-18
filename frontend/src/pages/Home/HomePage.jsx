@@ -8,6 +8,7 @@ import CreatePostModal from '../../components/CreatePostModal/CreatePostModal'
 import SettingsMenu from '../../components/SettingsMenu/SettingsMenu'
 import MessagesNavLink from '../../components/MessagesNavLink'
 import NotificationsNavLink from '../../components/NotificationsNavLink'
+import StoriesBar from '../../components/StoriesBar'
 import api from '../../services/api'
 
 const FEED_PAGE_SIZE = 20
@@ -208,6 +209,8 @@ export default function HomePage() {
           </button>
         </div>
       </header>
+
+      <StoriesBar />
 
       {loading ? (
         <p>Carregando feed...</p>
