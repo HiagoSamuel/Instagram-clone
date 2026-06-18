@@ -687,6 +687,115 @@
   right: 0;
 }
 
+.stories-bar {
+  gap: 14px;
+  width: 100%;
+  margin: 0 0 22px;
+  padding: 4px 0 10px;
+  border: 0;
+  background: transparent;
+  scrollbar-width: none;
+}
+
+.stories-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.story-create-button,
+.story-pill {
+  min-width: 72px;
+  max-width: 72px;
+  color: var(--ig-text);
+  font-size: 0.72rem;
+}
+
+.story-create-button span,
+.story-pill .avatar {
+  width: 62px !important;
+  height: 62px !important;
+}
+
+.story-create-button span {
+  border: 1px solid var(--ig-border);
+  background: var(--ig-bg-elev);
+  color: var(--ig-text);
+  font-size: 1.7rem;
+  font-weight: 300;
+}
+
+.story-pill {
+  overflow: hidden;
+}
+
+.story-pill span:last-child {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  color: var(--ig-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.story-pill .avatar {
+  padding: 3px;
+  border: 0;
+  background: var(--ig-story-ring);
+}
+
+.story-pill .avatar img,
+.story-pill .avatar span {
+  border: 2px solid var(--ig-bg);
+  border-radius: 50%;
+}
+
+.story-pill-seen .avatar {
+  background: var(--ig-border);
+}
+
+.stories-error {
+  align-self: center;
+  color: var(--ig-danger);
+  white-space: nowrap;
+}
+
+.story-viewer {
+  background: #000;
+}
+
+.story-viewer-progress {
+  top: 12px;
+  left: 50%;
+  width: min(430px, calc(100vw - 28px));
+  right: auto;
+  transform: translateX(-50%);
+}
+
+.story-viewer-progress span {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.story-viewer-header {
+  top: 26px;
+  left: 50%;
+  width: min(430px, calc(100vw - 28px));
+  right: auto;
+  transform: translateX(-50%);
+}
+
+.story-viewer-header button {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.story-viewer-media {
+  width: min(430px, 100vw);
+  height: min(760px, 100vh);
+  max-width: none;
+  max-height: none;
+  border-radius: 0;
+  object-fit: contain;
+}
+
 .home-page {
   min-height: 100vh;
   padding: 28px 32px 48px;
