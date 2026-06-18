@@ -184,8 +184,20 @@ export default function ProfilePage() {
       <div className="profile-card">
         <div className="profile-header">
           <Avatar src={profile.avatar_url} size={96} alt={`Avatar de ${profile.username}`} />
-          <div>
-            <h1>{profile.username}</h1>
+          <div className="profile-header-content">
+            <div className="profile-title-row">
+              <h1>{profile.username}</h1>
+              {isOwnProfile && (
+                <button className="button button-primary" onClick={openEdit}>
+                  Editar perfil
+                </button>
+              )}
+            </div>
+            <div className="profile-stats">
+              <span><strong>{posts.length}</strong> posts</span>
+              <span><strong>0</strong> seguidores</span>
+              <span><strong>0</strong> seguindo</span>
+            </div>
             {profile.bio && <p className="profile-bio">{profile.bio}</p>}
             <p className="profile-meta">{profile.full_name || 'Sem nome verdadeiro'}</p>
           </div>
@@ -195,11 +207,6 @@ export default function ProfilePage() {
           <Link to="/" className="button button-secondary">Voltar para o feed</Link>
           <MessagesNavLink />
           <NotificationsNavLink />
-          {isOwnProfile && (
-            <button className="button button-primary" onClick={openEdit}>
-              Editar meu perfil
-            </button>
-          )}
           {!isOwnProfile && profile?.id && (
             <>
               <FriendButton userId={profile.id} onStatusChange={setFriendshipStatus} />
@@ -225,12 +232,19 @@ export default function ProfilePage() {
         ) : (
           <div className="profile-feed-list">
             {posts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                onLikeToggle={handleLikeToggle}
-                onPostDelete={handlePostDelete}
-              />
+              <article key={post.id} className="profile-grid-post">
+                {post.video_url ? (
+                  <video src={post.video_url} poster={post.video_thumbnail_url || post.image_url} muted />
+                ) : post.image_url && post.image_url !== 'text-only-post' ? (
+                  <img src={post.image_url} alt={post.caption || 'Post'} />
+                ) : (
+                  <div className="profile-grid-text-post">{post.caption || 'Post'}</div>
+                )}
+                <div className="profile-grid-overlay">
+                  <span>{post.likes_count || 0} curtidas</span>
+                  <span>{post.comments_count || 0} comentários</span>
+                </div>
+              </article>
             ))}
           </div>
         )}
