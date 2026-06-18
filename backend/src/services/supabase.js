@@ -1,10 +1,13 @@
 const { createClient } = require('@supabase/supabase-js')
 
-// Injetando os valores diretamente no código para não depender das variáveis do Railway
-const supabaseUrl = 'https://cjjwvmffbmyqttiaajbu.supabase.co'
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_KEY || process.env.SUPABASE_SERVICE_KEY
 
-// ⚠️ VEJA O PASSO ABAIXO para preencher essa string antes de salvar!
-const supabaseKey = 'sb_secret_GyRBiqEhm5T_Y8EWWEZvGg_1h6PN-Ts' 
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error(
+    'Configuracao do Supabase ausente. Defina SUPABASE_URL e SUPABASE_KEY (ou SUPABASE_SERVICE_KEY) no ambiente.'
+  )
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey)
 
