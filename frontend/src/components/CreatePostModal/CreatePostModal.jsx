@@ -17,11 +17,14 @@ function containsBlockedWord(text, blockedWords) {
 
 export default function CreatePostModal({ open, onClose, onPostCreated }) {
   const [image, setImage] = useState(null)
+  const [video, setVideo] = useState(null)
   const [attachment, setAttachment] = useState(null)
   const [caption, setCaption] = useState('')
   const [loading, setLoading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState('')
   const imageInputRef = useRef(null)
+  const videoInputRef = useRef(null)
   const attachmentInputRef = useRef(null)
 
   if (!open) {
@@ -33,6 +36,11 @@ export default function CreatePostModal({ open, onClose, onPostCreated }) {
     setError('')
   }
 
+  const handleVideoChange = (e) => {
+    setVideo(e.target.files[0] || null)
+    setError('')
+  }
+
   const handleAttachmentChange = (e) => {
     setAttachment(e.target.files[0] || null)
     setError('')
@@ -41,21 +49,25 @@ export default function CreatePostModal({ open, onClose, onPostCreated }) {
   // FIX: reseta todo o estado ao fechar
   const handleClose = () => {
     setImage(null)
+    setVideo(null)
     setAttachment(null)
     setCaption('')
+    setUploadProgress(0)
     setError('')
     if (imageInputRef.current) imageInputRef.current.value = ''
+    if (videoInputRef.current) videoInputRef.current.value = ''
     if (attachmentInputRef.current) attachmentInputRef.current.value = ''
     onClose()
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!image && !attachment && !caption.trim()) {
-      setError('Escreva uma legenda, adicione uma imagem ou anexe um arquivo para postar.')
+    if (!image && !video && !attachment && !caption.trim()) {
+      setError('Escreva uma legenda, adicione uma imagem, video ou anexe um arquivo para postar.')
       return
     }
     setLoading(true)
+    setUploadProgress(0)
     setError('')
 
     const blockedWords = JSON.parse(localStorage.getItem('blockedWords') || '[]')
@@ -69,26 +81,35 @@ export default function CreatePostModal({ open, onClose, onPostCreated }) {
     if (image) {
       formData.append('image', image)
     }
+    if (video) {
+      formData.append('video', video)
+    }
     if (attachment) {
       formData.append('attachment', attachment)
     }
     formData.append('caption', caption.trim())
 
     try {
-      const response = await fetch(apiUrl('/posts'), {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: formData,
+      const post = await new Promise((resolve, reject) => {
+        const request = new XMLHttpRequest()
+        request.open('POST', apiUrl('/posts'))
+        request.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`)
+        request.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            setUploadProgress(Math.round((event.loaded / event.total) * 100))
+          }
+        }
+        request.onload = () => {
+          const data = JSON.parse(request.responseText || '{}')
+          if (request.status >= 200 && request.status < 300) {
+            resolve(data)
+          } else {
+            reject(new Error(data.error || 'Erro ao criar post.'))
+          }
+        }
+        request.onerror = () => reject(new Error('Erro de rede ao criar post.'))
+        request.send(formData)
       })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Erro ao criar post.')
-      }
-
-      const post = await response.json()
       onPostCreated(post)
       handleClose()
     } catch (err) {
@@ -131,6 +152,24 @@ export default function CreatePostModal({ open, onClose, onPostCreated }) {
             <div className="create-post-upload-control">
               <button
                 type="button"
+                className="create-post-upload-button"
+                onClick={() => videoInputRef.current?.click()}
+              >
+                Adicionar vídeo
+              </button>
+              <input
+                ref={videoInputRef}
+                type="file"
+                accept="video/*"
+                onChange={handleVideoChange}
+                className="create-post-hidden-input"
+              />
+              {video && <span className="create-post-file-name">{video.name}</span>}
+            </div>
+
+            <div className="create-post-upload-control">
+              <button
+                type="button"
                 className="create-post-upload-button create-post-attachment-button"
                 onClick={() => attachmentInputRef.current?.click()}
                 aria-label="Adicionar arquivo"
@@ -166,6 +205,11 @@ export default function CreatePostModal({ open, onClose, onPostCreated }) {
           </label>
 
           {error && <p className="create-post-modal-error">{error}</p>}
+          {loading && uploadProgress > 0 && (
+            <div className="create-post-upload-progress" aria-label={`Upload ${uploadProgress}%`}>
+              <span style={{ width: `${uploadProgress}%` }} />
+            </div>
+          )}
 
           <button type="submit" disabled={loading}>
             {loading ? 'Postando...' : 'Postar'}

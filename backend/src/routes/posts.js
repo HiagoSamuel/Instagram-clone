@@ -18,9 +18,11 @@ const authMiddleware = require('../middlewares/authMiddleware')
 // FIX: multer com validação de tipo e tamanho (máx 10MB)
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (file.fieldname === 'image' && file.mimetype.startsWith('image/')) {
+      cb(null, true)
+    } else if (file.fieldname === 'video' && file.mimetype.startsWith('video/')) {
       cb(null, true)
     } else if (file.fieldname === 'attachment') {
       cb(null, true)
@@ -36,6 +38,7 @@ const router = express.Router()
 router.get('/feed',           authMiddleware,                        getFeed)
 router.post('/',              authMiddleware, upload.fields([
   { name: 'image', maxCount: 1 },
+  { name: 'video', maxCount: 1 },
   { name: 'attachment', maxCount: 1 },
 ]), createPost)
 router.get('/user/:username', authMiddleware,                        getUserPosts)
@@ -57,7 +60,7 @@ router.use((err, _req, res, _next) => {
     return res.status(400).json({ error: err.message })
   }
   if (err.code === 'LIMIT_FILE_SIZE') {
-    return res.status(400).json({ error: 'Arquivo muito grande. Máximo: 10MB.' })
+    return res.status(400).json({ error: 'Arquivo muito grande. Máximo: 50MB.' })
   }
   res.status(500).json({ error: 'Erro interno.' })
 })

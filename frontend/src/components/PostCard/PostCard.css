@@ -476,3 +476,10 @@
   font-size: 0.8rem;
   color: var(--danger);
 }
+
+.post-image video {
+  width: 100%;
+  display: block;
+  max-height: 620px;
+  background: #000;
+}

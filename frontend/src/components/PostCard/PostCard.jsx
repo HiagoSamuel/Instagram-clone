@@ -75,6 +75,7 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
   const liked = post.liked_by_me
   const isOwner = currentUser && post.user_id === currentUser.id
   const hasImage = post.image_url && post.image_url !== TEXT_ONLY_IMAGE_URL
+  const hasVideo = Boolean(post.video_url)
 
   // comments state
   const [commentsOpen, setCommentsOpen]     = useState(false)
@@ -329,7 +330,16 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
       </div>
 
       {/* image */}
-      {hasImage && (
+      {hasVideo ? (
+        <div className="post-image">
+          <video
+            src={post.video_url}
+            poster={post.video_thumbnail_url || post.image_url}
+            controls
+            preload="metadata"
+          />
+        </div>
+      ) : hasImage && (
         <div className="post-image">
           <img src={post.image_url} alt={post.caption || 'Foto do post'} />
         </div>

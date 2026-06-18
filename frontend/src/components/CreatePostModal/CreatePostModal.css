@@ -73,7 +73,7 @@
 
 .create-post-upload-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -143,6 +143,21 @@
   color: #ed4956;
   font-size: 0.9rem;
   margin: 0;
+}
+
+.create-post-upload-progress {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #27272a;
+}
+
+.create-post-upload-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--create-post-primary);
+  transition: width 0.2s ease;
 }
 
 .create-post-modal-form button[type="submit"] {

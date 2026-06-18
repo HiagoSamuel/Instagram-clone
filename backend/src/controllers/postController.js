@@ -1,5 +1,8 @@
 const supabase = require('../services/supabase')
 const path = require('path')
+const os = require('os')
+const fs = require('fs/promises')
+const ffmpeg = require('fluent-ffmpeg')
 const { areFriends, isMissingFriendshipsTable } = require('./friendshipController')
 const { createNotification } = require('../helpers/notificationHelper')
 
@@ -14,6 +17,9 @@ const POST_SELECT_WITH_FILES = `
       file_name,
       file_type,
       file_size,
+      video_url,
+      video_thumbnail_url,
+      media_type,
       created_at,
       user_id,
       users!posts_user_id_fkey (
@@ -36,7 +42,7 @@ const POST_SELECT_BASE = `
     `
 
 function isMissingPostFileColumns(error) {
-  return error?.code === 'PGRST204' || /file_(url|name|type|size)/i.test(error?.message || '')
+  return error?.code === 'PGRST204' || /(file_(url|name|type|size)|video_url|video_thumbnail_url|media_type)/i.test(error?.message || '')
 }
 
 function isMissingDiscoveryTables(error) {
@@ -66,6 +72,71 @@ async function uploadPostFile(userId, file, folder) {
 
   const { data: urlData } = supabase.storage.from('posts').getPublicUrl(filename)
   return urlData.publicUrl
+}
+
+async function writeTempFile(file) {
+  const filename = path.join(os.tmpdir(), `${Date.now()}-${safeFileName(file.originalname)}`)
+  await fs.writeFile(filename, file.buffer)
+  return filename
+}
+
+function probeVideo(filePath) {
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(filePath, (error, metadata) => {
+      if (error) reject(error)
+      else resolve(metadata)
+    })
+  })
+}
+
+function createVideoThumbnail(filePath, outputPath) {
+  return new Promise((resolve, reject) => {
+    ffmpeg(filePath)
+      .on('end', resolve)
+      .on('error', reject)
+      .screenshots({
+        timestamps: ['00:00:01'],
+        filename: path.basename(outputPath),
+        folder: path.dirname(outputPath),
+        size: '640x?',
+      })
+  })
+}
+
+async function processVideoUpload(userId, file) {
+  const maxDurationSeconds = Number(process.env.MAX_VIDEO_DURATION_SECONDS || 60)
+  const tempVideoPath = await writeTempFile(file)
+  const tempThumbPath = path.join(os.tmpdir(), `${Date.now()}-${safeFileName(file.originalname)}.jpg`)
+
+  try {
+    const metadata = await probeVideo(tempVideoPath)
+    const duration = Number(metadata.format?.duration || 0)
+    if (duration > maxDurationSeconds) {
+      throw new Error(`Video muito longo. Maximo: ${maxDurationSeconds} segundos.`)
+    }
+
+    await createVideoThumbnail(tempVideoPath, tempThumbPath)
+    const [videoBuffer, thumbnailBuffer] = await Promise.all([
+      fs.readFile(tempVideoPath),
+      fs.readFile(tempThumbPath),
+    ])
+
+    const videoUrl = await uploadPostFile(userId, {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      buffer: videoBuffer,
+    }, 'videos')
+    const thumbnailUrl = await uploadPostFile(userId, {
+      originalname: `${path.basename(file.originalname, path.extname(file.originalname))}-thumb.jpg`,
+      mimetype: 'image/jpeg',
+      buffer: thumbnailBuffer,
+    }, 'video-thumbnails')
+
+    return { videoUrl, thumbnailUrl }
+  } finally {
+    await fs.rm(tempVideoPath, { force: true }).catch(() => {})
+    await fs.rm(tempThumbPath, { force: true }).catch(() => {})
+  }
 }
 
 async function getPostAudienceUserIds(userId) {
@@ -295,14 +366,16 @@ exports.createPost = async (req, res) => {
   const { userId } = req.user
   const caption = (req.body.caption || '').trim()
   const imageFile = req.files?.image?.[0] || null
+  const videoFile = req.files?.video?.[0] || null
   const attachmentFile = req.files?.attachment?.[0] || null
 
-  if (!imageFile && !attachmentFile && !caption) {
-    return res.status(400).json({ error: 'Escreva uma legenda, envie uma imagem ou anexe um arquivo.' })
+  if (!imageFile && !videoFile && !attachmentFile && !caption) {
+    return res.status(400).json({ error: 'Escreva uma legenda, envie uma imagem, video ou anexe um arquivo.' })
   }
 
   let imageUrl = TEXT_ONLY_IMAGE_URL
   let attachment = null
+  let video = null
 
   if (imageFile) {
     try {
@@ -325,6 +398,20 @@ exports.createPost = async (req, res) => {
     }
   }
 
+  if (videoFile) {
+    try {
+      const { videoUrl, thumbnailUrl } = await processVideoUpload(userId, videoFile)
+      video = {
+        video_url: videoUrl,
+        video_thumbnail_url: thumbnailUrl,
+        media_type: 'video',
+      }
+      imageUrl = thumbnailUrl
+    } catch (videoError) {
+      return res.status(400).json({ error: videoError.message || 'Erro ao processar video.' })
+    }
+  }
+
   const { data: post, error } = await supabase
     .from('posts')
     .insert({
@@ -332,6 +419,7 @@ exports.createPost = async (req, res) => {
       image_url: imageUrl,
       caption: caption || null,
       ...(attachment || {}),
+      ...(video || {}),
     })
     .select()
     .single()
@@ -414,7 +502,7 @@ exports.getUserPosts = async (req, res) => {
 
   let { data: posts, error } = await supabase
     .from('posts')
-    .select('id, image_url, caption, file_url, file_name, file_type, file_size, created_at, user_id')
+    .select('id, image_url, caption, file_url, file_name, file_type, file_size, video_url, video_thumbnail_url, media_type, created_at, user_id')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
