@@ -1,5 +1,6 @@
 const supabase = require('../services/supabase')
 const path = require('path')
+const { createNotification } = require('../helpers/notificationHelper')
 
 const COMMENT_SELECT_WITH_FILES = `
       id,
@@ -180,6 +181,23 @@ exports.createComment = async (req, res) => {
   }
 
   await emitCommentEvent(req, 'new_comment', postId, { comment }, userId)
+
+  const { data: post } = await supabase
+    .from('posts')
+    .select('user_id')
+    .eq('id', postId)
+    .single()
+
+  await createNotification({
+    io: req.app.get('io'),
+    recipientId: post?.user_id,
+    actorId: userId,
+    type: 'comment',
+    postId,
+    pushTitle: 'Novo comentario',
+    pushBody: 'Alguem comentou no seu post.',
+    pushUrl: '/',
+  })
 
   res.status(201).json(comment)
 }

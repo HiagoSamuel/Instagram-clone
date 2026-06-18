@@ -377,6 +377,37 @@
   font-weight: 700;
 }
 
+.notifications-list {
+  display: grid;
+  gap: 12px;
+}
+
+.notification-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.notification-item-unread {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+}
+
+.notification-body {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+}
+
+.notification-body span {
+  color: var(--text-muted);
+  font-size: 0.86rem;
+}
+
 .page-shell {
   min-height: 100vh;
   padding: 32px;

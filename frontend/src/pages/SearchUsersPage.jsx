@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import Avatar from '../components/Avatar/Avatar'
 import PostCard from '../components/PostCard/PostCard'
 import MessagesNavLink from '../components/MessagesNavLink'
+import NotificationsNavLink from '../components/NotificationsNavLink'
 import api from '../services/api'
 
 function extractHashtags(text) {
@@ -71,6 +72,7 @@ export default function SearchUsersPage() {
           <Link to="/" className="button button-secondary">Feed</Link>
           <Link to="/explore" className="button button-secondary">Explorar</Link>
           <MessagesNavLink />
+          <NotificationsNavLink />
         </div>
       </header>
 

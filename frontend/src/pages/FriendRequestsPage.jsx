@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Avatar from '../components/Avatar/Avatar'
 import MessagesNavLink from '../components/MessagesNavLink'
+import NotificationsNavLink from '../components/NotificationsNavLink'
 import api from '../services/api'
 
 export default function FriendRequestsPage() {
@@ -40,6 +41,7 @@ export default function FriendRequestsPage() {
         <div className="page-header-actions">
           <Link to="/" className="button button-secondary">Feed</Link>
           <MessagesNavLink />
+          <NotificationsNavLink />
         </div>
       </header>
 

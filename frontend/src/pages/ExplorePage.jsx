@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import MessagesNavLink from '../components/MessagesNavLink'
+import NotificationsNavLink from '../components/NotificationsNavLink'
 import PostCard from '../components/PostCard/PostCard'
 import api from '../services/api'
 
@@ -42,6 +43,7 @@ export default function ExplorePage() {
           <Link to="/" className="button button-secondary">Feed</Link>
           <Link to="/search" className="button button-secondary">Buscar</Link>
           <MessagesNavLink />
+          <NotificationsNavLink />
         </div>
       </header>
 

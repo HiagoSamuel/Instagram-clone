@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Avatar from '../components/Avatar/Avatar'
+import NotificationsNavLink from '../components/NotificationsNavLink'
 import { useSocket } from '../context/SocketContext'
 import api from '../services/api'
 
@@ -47,7 +48,10 @@ export default function ConversationsPage() {
           <h1>Mensagens</h1>
           <p>Conversas com seus amigos.</p>
         </div>
-        <Link to="/" className="button button-secondary">Feed</Link>
+        <div className="page-header-actions">
+          <Link to="/" className="button button-secondary">Feed</Link>
+          <NotificationsNavLink />
+        </div>
       </header>
 
       {loading ? (

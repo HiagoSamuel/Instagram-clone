@@ -1,4 +1,5 @@
 const supabase = require('../services/supabase')
+const { createNotification } = require('../helpers/notificationHelper')
 
 function isMissingFriendshipsTable(error) {
   return error?.code === 'PGRST205' || error?.code === '42P01'
@@ -53,6 +54,15 @@ exports.sendRequest = async (req, res) => {
       .single()
 
     if (error) return res.status(500).json({ error: error.message })
+    await createNotification({
+      io: req.app.get('io'),
+      recipientId: addresseeId,
+      actorId: requesterId,
+      type: 'friend_request',
+      pushTitle: 'Nova solicitacao de amizade',
+      pushBody: 'Alguem quer ser seu amigo.',
+      pushUrl: '/requests',
+    })
     return res.status(201).json(data)
   } catch (error) {
     return res.status(500).json({ error: error.message || 'Erro ao enviar solicitacao.' })

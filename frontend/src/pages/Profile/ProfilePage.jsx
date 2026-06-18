@@ -7,6 +7,7 @@ import { userService } from '../../services/userService'
 import Avatar, { DEFAULT_AVATAR_SRC } from '../../components/Avatar/Avatar'
 import FriendButton from '../../components/FriendButton'
 import MessagesNavLink from '../../components/MessagesNavLink'
+import NotificationsNavLink from '../../components/NotificationsNavLink'
 import PostCard from '../../components/PostCard/PostCard'
 import './ProfilePage.css'
 
@@ -193,6 +194,7 @@ export default function ProfilePage() {
         <div className="profile-actions">
           <Link to="/" className="button button-secondary">Voltar para o feed</Link>
           <MessagesNavLink />
+          <NotificationsNavLink />
           {isOwnProfile && (
             <button className="button button-primary" onClick={openEdit}>
               Editar meu perfil

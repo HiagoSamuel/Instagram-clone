@@ -1,6 +1,7 @@
 const supabase = require('../services/supabase')
 const path = require('path')
 const { areFriends, isMissingFriendshipsTable } = require('./friendshipController')
+const { createNotification } = require('../helpers/notificationHelper')
 
 const TEXT_ONLY_IMAGE_URL = 'text-only-post'
 const DEFAULT_FEED_LIMIT = 20
@@ -464,6 +465,16 @@ exports.likePost = async (req, res) => {
 
   const likes_count = await getPostLikesCount(id)
   await emitPostEvent(req, 'post_liked', post.user_id, { postId: id, userId, likes_count })
+  await createNotification({
+    io: req.app.get('io'),
+    recipientId: post.user_id,
+    actorId: userId,
+    type: 'like',
+    postId: id,
+    pushTitle: 'Nova curtida',
+    pushBody: 'Alguem curtiu seu post.',
+    pushUrl: '/',
+  })
 
   return res.status(201).json({ message: 'Post curtido', likes_count })
 }

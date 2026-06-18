@@ -7,6 +7,7 @@ import PostCard from '../../components/PostCard/PostCard'
 import CreatePostModal from '../../components/CreatePostModal/CreatePostModal'
 import SettingsMenu from '../../components/SettingsMenu/SettingsMenu'
 import MessagesNavLink from '../../components/MessagesNavLink'
+import NotificationsNavLink from '../../components/NotificationsNavLink'
 import api from '../../services/api'
 
 const FEED_PAGE_SIZE = 20
@@ -193,6 +194,7 @@ export default function HomePage() {
             {pendingCount > 0 && <span className="nav-badge">{pendingCount}</span>}
           </Link>
           <MessagesNavLink />
+          <NotificationsNavLink />
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}

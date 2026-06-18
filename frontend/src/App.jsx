@@ -12,6 +12,7 @@ import ChatPage from './pages/ChatPage'
 import SearchUsersPage from './pages/SearchUsersPage'
 import HashtagPage from './pages/HashtagPage'
 import ExplorePage from './pages/ExplorePage'
+import NotificationsPage from './pages/NotificationsPage'
 import SocketStatusBanner from './components/SocketStatusBanner'
 import './App.css'
 
@@ -100,6 +101,14 @@ function App() {
                 element={
                   <RequireAuth>
                     <ConversationsPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/notifications"
+                element={
+                  <RequireAuth>
+                    <NotificationsPage />
                   </RequireAuth>
                 }
               />

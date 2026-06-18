@@ -9,8 +9,11 @@ const SocketContext = createContext({
   connectionStatus: 'idle',
   resyncVersion: 0,
   unreadMessageCount: 0,
+  unreadNotificationCount: 0,
   refreshUnreadMessageCount: async () => 0,
+  refreshUnreadNotificationCount: async () => 0,
   setUnreadMessageCount: () => {},
+  setUnreadNotificationCount: () => {},
 })
 
 function getSocketUrl() {
@@ -25,6 +28,7 @@ export function SocketProvider({ children }) {
   const [connectionStatus, setConnectionStatus] = useState('idle')
   const [resyncVersion, setResyncVersion] = useState(0)
   const [unreadMessageCount, setUnreadMessageCount] = useState(0)
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0)
 
   const refreshUnreadMessageCount = async () => {
     if (!localStorage.getItem('token')) {
@@ -38,6 +42,18 @@ export function SocketProvider({ children }) {
     return nextCount
   }
 
+  const refreshUnreadNotificationCount = async () => {
+    if (!localStorage.getItem('token')) {
+      setUnreadNotificationCount(0)
+      return 0
+    }
+
+    const { data } = await api.get('/notifications/unread-count')
+    const nextCount = data.unread_count || 0
+    setUnreadNotificationCount(nextCount)
+    return nextCount
+  }
+
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (!user || !token) {
@@ -46,10 +62,12 @@ export function SocketProvider({ children }) {
       setIsConnected(false)
       setConnectionStatus('idle')
       setUnreadMessageCount(0)
+      setUnreadNotificationCount(0)
       return undefined
     }
 
     refreshUnreadMessageCount().catch(() => setUnreadMessageCount(0))
+    refreshUnreadNotificationCount().catch(() => setUnreadNotificationCount(0))
 
     const socket = io(getSocketUrl(), {
       auth: { token },
@@ -60,6 +78,7 @@ export function SocketProvider({ children }) {
     const markSynced = async () => {
       window.clearTimeout(statusTimerRef.current)
       await refreshUnreadMessageCount().catch(() => {})
+      await refreshUnreadNotificationCount().catch(() => {})
       setResyncVersion((version) => version + 1)
       setConnectionStatus('synced')
       statusTimerRef.current = window.setTimeout(() => {
@@ -97,6 +116,13 @@ export function SocketProvider({ children }) {
         setUnreadMessageCount(conversation.unread_total)
       }
     })
+    socket.on('notification_created', (notification) => {
+      if (typeof notification?.unread_count === 'number') {
+        setUnreadNotificationCount(notification.unread_count)
+      } else {
+        setUnreadNotificationCount((count) => count + 1)
+      }
+    })
     socket.on('connect_error', (error) => {
       setIsConnected(false)
       if (error.message === 'Unauthorized') {
@@ -111,6 +137,7 @@ export function SocketProvider({ children }) {
       socket.io.off('reconnect_attempt', handleReconnectAttempt)
       socket.io.off('reconnect', handleReconnect)
       socket.off('conversation_updated')
+      socket.off('notification_created')
       socket.off('connect_error')
       socket.disconnect()
       socketRef.current = null
@@ -127,8 +154,11 @@ export function SocketProvider({ children }) {
         connectionStatus,
         resyncVersion,
         unreadMessageCount,
+        unreadNotificationCount,
         refreshUnreadMessageCount,
+        refreshUnreadNotificationCount,
         setUnreadMessageCount,
+        setUnreadNotificationCount,
       }}
     >
       {children}
