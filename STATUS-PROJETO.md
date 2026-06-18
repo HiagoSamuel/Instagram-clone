@@ -1,95 +1,127 @@
 # Status do Projeto - Instagram Clone
 
-Auditoria atualizada em: 17/06/2026
+Auditoria atualizada em: 18/06/2026
+
+## Arvore resumida do repositorio
+
+```txt
+backend/
+  src/
+    controllers/  auth, users, posts, comments, friendships, messages, notifications, stories
+    helpers/      notificationHelper
+    middlewares/  authMiddleware
+    routes/       auth, users, posts, friendships, messages, notifications, stories, search, explore, push
+    services/     supabase, push
+  supabase-*.sql  migrations versionadas
+  nixpacks.toml   ffmpeg no Railway
+
+frontend/
+  src/
+    components/   PostCard, CreatePostModal, StoriesBar, StoryViewer, badges/nav links
+    context/      AuthContext, SocketContext, ThemeContext
+    pages/        Home, Profile, Search, Explore, Conversations, Chat, Notifications
+    services/     api, postService
+```
 
 ## Resumo rapido
 
-- Fase 1: 9/10 itens prontos
-- Fase 2: 23/23 itens prontos
-- Fase 3: 8/8 itens prontos
-- Fase 4: 10/10 itens implementados
-- Progresso geral estimado: 98%
+| Fase | Status |
+|---|---:|
+| Fase 1 - Base | 13/13 itens OK |
+| Fase 2 - Amizades + chat | 10/10 itens OK |
+| Fase 3 - Engajamento e midia | 17/17 itens OK |
+| Refactors opcionais P6 | 0/3 itens mantidos como divida consciente |
 
-## Pronto
+Progresso geral das fases funcionais: 100%.
 
-### Fase 1
+## Checklist preenchido
 
-- Autenticacao com cadastro, login e JWT.
-- Rotas protegidas no frontend.
-- Feed com posts, curtidas e comentarios.
-- Criacao e exclusao de posts.
-- Perfil de usuario com edicao basica.
-- Upload de avatar.
-- Upload de imagem em posts.
-- Anexos de arquivos em posts.
-- Anexos de imagem/arquivo em comentarios.
+### Fase 1 - Base
 
-### Fase 2
+- [x] AuthController com registro/login JWT: `backend/src/controllers/authController.js`.
+- [x] AuthMiddleware protegendo rotas privadas: `backend/src/middlewares/authMiddleware.js`.
+- [x] UserController com perfil/busca: `backend/src/controllers/userController.js`.
+- [x] PostController cria post/lista feed: `backend/src/controllers/postController.js:329`, `backend/src/controllers/postController.js:296`.
+- [x] MessageController envia/lista DMs: `backend/src/controllers/messageController.js`.
+- [x] Rotas auth/users/posts/messages registradas: `backend/src/app.js:39`, `backend/src/app.js:42`, `backend/src/app.js:40`, `backend/src/app.js:50`.
+- [x] Supabase via env, sem chave hardcoded: `backend/src/services/supabase.js`.
+- [x] Login/Register: `frontend/src/pages/Login/LoginPage.jsx`, `frontend/src/pages/Register/RegisterPage.jsx`.
+- [x] Home/Profile/Messages: `frontend/src/pages/Home/HomePage.jsx`, `frontend/src/pages/Profile/ProfilePage.jsx`, `frontend/src/pages/ConversationsPage.jsx`.
+- [x] Componentes principais: `frontend/src/components/PostCard/PostCard.jsx`, `frontend/src/components/Avatar/Avatar.jsx`, `frontend/src/components/CreatePostModal/CreatePostModal.jsx`.
+- [x] AuthContext/useAuth: `frontend/src/context/AuthContext.jsx`.
+- [x] Services de API/posts: `frontend/src/services/api.js`, `frontend/src/services/postService.js`.
+- [x] Schema/Storage documentados por migrations SQL: `backend/supabase-engagement.sql`, `backend/supabase-post-videos.sql`.
 
-- Sistema de amizades com solicitar, aceitar, remover, listar amigos, listar pendentes e consultar status.
-- Feed filtrado por usuario logado e amigos aceitos.
-- Perfil respeitando privacidade de posts.
-- `FriendButton` no perfil.
-- Pagina de solicitacoes de amizade.
-- Badge de solicitacoes pendentes.
-- Tabela e controller de mensagens.
-- Historico de mensagens entre amigos.
-- Envio de mensagens apenas entre amigos.
-- Lista de conversas.
-- Marcar mensagens como lidas.
-- Contador global de mensagens nao lidas.
-- Badge de mensagens no link `Mensagens`.
-- Lista de conversas atualizada em tempo real.
+### Fase 2 - Amizades + chat
 
-### Fase 3
+- [x] Schema de amizade simetrica: `backend/supabase-friendships.sql`.
+- [x] Rotas enviar/aceitar/remover/listar amizade: `backend/src/routes/friendships.js`.
+- [x] Feed filtrado por amigos: `backend/src/controllers/postController.js:296`.
+- [x] FriendButton e FriendRequestsPage: `frontend/src/components/FriendButton.jsx`, `frontend/src/pages/FriendRequestsPage.jsx`.
+- [x] conversationId deterministico: `backend/src/controllers/messageController.js`.
+- [x] Rotas de mensagens e `/new?after=`: `backend/src/routes/messages.js`.
+- [x] ChatPage: `frontend/src/pages/ChatPage.jsx`.
+- [x] Socket.io no backend com JWT e salas `user:${userId}`: `backend/src/app.js`.
+- [x] SocketContext global: `frontend/src/context/SocketContext.jsx`.
+- [x] Chat/lista/badge reagem em tempo real: `frontend/src/pages/ConversationsPage.jsx`, `frontend/src/components/MessagesNavLink.jsx`.
 
-- Socket.io no backend e `socket.io-client` no frontend.
-- Servidor HTTP compartilhando a mesma porta do Express.
-- Middleware JWT no Socket.io.
-- Sala pessoal por usuario: `user:${userId}`.
-- Chat em tempo real com `send_message`, `new_message` e `message_sent`.
-- Fallback de polling quando o socket nao esta conectado.
-- Posts criados/removidos em tempo real.
-- Comentarios criados/removidos em tempo real.
-- Curtidas/descurtidas em tempo real.
-- Estados de conexao: offline, reconectando e sincronizado.
-- Ressincronizacao basica ao reconectar.
+### Fase 3 - Engajamento e midia
 
-### Fase 4
+#### M1 - Curtidas e comentarios
 
-- Busca unificada por usuarios, posts e hashtags.
-- Links clicaveis de hashtags nas legendas.
-- Pagina de hashtag com posts relacionados.
-- Persistencia de hashtags em `hashtags` e `post_hashtags`.
-- Busca full-text por legenda com fallback para `ILIKE`.
-- Pagina Explorar com posts publicos fora do circulo de amigos.
-- Hashtags em alta com cache TTL no backend.
-- Feed com paginacao por cursor.
-- Infinite scroll com `IntersectionObserver`.
-- PWA com manifest e service worker.
-- Web Push com assinaturas persistidas e envio para destinatarios offline.
+- [x] Tabelas `likes` e `comments`: `backend/supabase-engagement.sql`.
+- [x] Curtir/descurtir e comentarios no backend: `backend/src/controllers/postController.js:541`, `backend/src/controllers/commentController.js:126`.
+- [x] Rotas de likes/comments: `backend/src/routes/posts.js:43`, `backend/src/routes/posts.js:52`.
+- [x] Optimistic update de curtida: `frontend/src/components/PostCard/PostCard.jsx`.
+- [x] Comentarios, badge de nao lidos e contador total: `frontend/src/components/PostCard/PostCard.jsx:98`, `backend/src/controllers/postController.js:278`.
 
-## Parcial
+#### M2 - Notificacoes internas
 
-- Testes automatizados: existe uma base com `node --test` para regras criticas de mensagens, mas ainda falta ampliar para controllers de amizade, posts e fluxos HTTP completos.
-- Reconexao: o chat aberto busca mensagens perdidas ao reconectar; uma melhoria futura seria ressincronizar tambem a lista de conversas inteira quando o app volta de uma queda longa.
-- Push notifications: a infraestrutura esta pronta, mas o envio real depende de `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` e `VAPID_SUBJECT` configuradas no backend e `backend/supabase-fase4.sql` executado no Supabase.
+- [x] Tabela `notifications`: `backend/supabase-notifications.sql:1`.
+- [x] Helper grava no banco e emite Socket.io: `backend/src/helpers/notificationHelper.js:4`.
+- [x] Disparo ao curtir/comentar/pedido amizade: `backend/src/controllers/postController.js:556`, `backend/src/controllers/commentController.js:191`, `backend/src/controllers/friendshipController.js:57`.
+- [x] Rotas listar/marcar lida: `backend/src/routes/notifications.js`.
+- [x] Badge/lista no frontend: `frontend/src/components/NotificationsNavLink.jsx:4`, `frontend/src/pages/NotificationsPage.jsx:16`.
 
-## Falta
+#### M3 - Stories
 
-- Testes de integracao reais com Supabase/local test database.
-- Teste automatizado end-to-end de Socket.io com dois clientes autenticados.
-- Pipeline de CI para rodar `npm test` e `npm run build` automaticamente.
-- UI para escolher se um post e publico ou apenas para amigos.
+- [x] Tabela `stories` com expiracao: `backend/supabase-stories.sql:1`.
+- [x] Criar story e listar apenas ativos: `backend/src/controllers/storyController.js:54`, `backend/src/controllers/storyController.js:80`.
+- [x] StoriesBar no topo da Home: `frontend/src/components/StoriesBar.jsx:6`, `frontend/src/pages/Home/HomePage.jsx:213`.
+- [x] StoryViewer fullscreen com progresso: `frontend/src/components/StoryViewer.jsx:6`.
 
-## Analise do WebSocket
+#### M4 - Videos
 
-O projeto usa um desenho bom para tempo real: o backend autentica cada socket com JWT, coloca o usuario em uma sala propria e emite eventos apenas para quem tem direito de ver os dados. O chat usa WebSocket como caminho principal e polling como fallback, o que deixa a aplicacao mais resistente. Posts, comentarios, curtidas, conversas e badges ja passam pelo mesmo modelo de eventos; isso deixa o codigo mais facil de entender porque tudo segue a mesma ideia: banco primeiro como fonte da verdade, socket depois como entrega rapida.
+- [x] `fluent-ffmpeg` instalado: `backend/package.json:18`, `package-lock.json:21`.
+- [x] `nixpacks.toml` instala ffmpeg no Railway: `backend/nixpacks.toml:2`.
+- [x] Upload de video com validacao de duracao e thumbnail: `backend/src/controllers/postController.js:106`, `backend/src/controllers/postController.js:403`.
+- [x] Player HTML5 e progresso de upload: `frontend/src/components/PostCard/PostCard.jsx:336`, `frontend/src/components/CreatePostModal/CreatePostModal.jsx`.
 
-## Proximos passos sugeridos
+### P6 - Refactors opcionais
 
-1. Ampliar testes automatizados para amizade, posts e comentarios.
-2. Criar teste end-to-end de Socket.io com dois clientes fake autenticados.
-3. Adicionar CI para validar build e testes a cada push.
-4. Adicionar controle de privacidade por post (`publico` / `somente amigos`).
-5. Gerar chaves VAPID de producao e validar push em HTTPS.
+- [~] Extrair `Navbar`, `Button`, `Modal`: mantido como divida tecnica; o app funciona e mexer nisso agora teria risco visual amplo.
+- [~] Criar `authService` e `messageService`: mantido como divida tecnica; chamadas atuais estao funcionais.
+- [~] Mover edicao de perfil do authController para userController: mantido como divida tecnica organizacional.
+
+## Validacao executada
+
+- `node --check` nos controllers/rotas alterados.
+- `npm test` no backend: 3 testes passaram.
+- `npm run build` no frontend: build Vite passou.
+
+Observacao: as migrations SQL precisam ser executadas no Supabase antes de testar notificacoes, stories e videos em producao.
+
+## O que mudou nesta rodada
+
+1. `c3f380d chore(security): remove credenciais supabase do codigo`
+2. `4e2f62d feat(db): adiciona schema de engajamento`
+3. `8afa3d0 feat(comments): adiciona contador total`
+4. `350c129 feat(notifications): adiciona notificacoes internas`
+5. `1f2601e feat(stories): adiciona stories ativos`
+6. `67a55ba feat(videos): adiciona upload e player`
+
+## Proximo passo recomendado
+
+1. Rodar no Supabase: `backend/supabase-engagement.sql`, `backend/supabase-notifications.sql`, `backend/supabase-stories.sql` e `backend/supabase-post-videos.sql`.
+2. Fazer teste manual em duas contas para confirmar notificacoes, stories e videos no ambiente real.
+3. Rotacionar a chave antiga do Supabase no painel, porque ela ja apareceu no historico git antes do P0.
