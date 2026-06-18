@@ -14,6 +14,7 @@ import HashtagPage from './pages/HashtagPage'
 import ExplorePage from './pages/ExplorePage'
 import NotificationsPage from './pages/NotificationsPage'
 import SocketStatusBanner from './components/SocketStatusBanner'
+import InstagramShell from './components/InstagramShell'
 import './App.css'
 
 function RequireAuth({ children }) {
@@ -27,7 +28,7 @@ function RequireAuth({ children }) {
     return <Navigate to="/login" replace />
   }
 
-  return children
+  return <InstagramShell>{children}</InstagramShell>
 }
 
 function App() {
