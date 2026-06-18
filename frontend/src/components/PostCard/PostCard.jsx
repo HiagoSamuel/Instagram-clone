@@ -94,14 +94,27 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
   const [commentError, setCommentError] = useState('')
   const [localLiked, setLocalLiked] = useState(liked)
   const [localLikesCount, setLocalLikesCount] = useState(post.likes_count || 0)
+  const [localCommentsCount, setLocalCommentsCount] = useState(post.comments_count || 0)
   const imgInputRef = useRef(null)
   const attachmentInputRef = useRef(null)
+  const deletedCommentIdsRef = useRef(new Set())
   const unreadCommentLabel = unreadCommentCount > 99 ? '99+' : unreadCommentCount
+
+  const markCommentDeleted = (commentId) => {
+    if (deletedCommentIdsRef.current.has(commentId)) return false
+    deletedCommentIdsRef.current.add(commentId)
+    return true
+  }
 
   useEffect(() => {
     setLocalLiked(post.liked_by_me)
     setLocalLikesCount(post.likes_count || 0)
-  }, [post.liked_by_me, post.likes_count])
+    setLocalCommentsCount(post.comments_count || 0)
+  }, [post.liked_by_me, post.likes_count, post.comments_count])
+
+  useEffect(() => {
+    deletedCommentIdsRef.current.clear()
+  }, [post.id])
 
   // FIX: revoga URL de preview ao desmontar ou trocar imagem (evita memory leak)
   useEffect(() => {
@@ -121,6 +134,7 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
 
       setComments((prev) => {
         if (prev.some((item) => item.id === comment.id)) return prev
+        setLocalCommentsCount((count) => count + 1)
         if (shouldCountAsUnread) {
           setUnreadCommentCount((count) => count + 1)
         }
@@ -134,7 +148,11 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
 
     const handleCommentDeleted = ({ postId, commentId }) => {
       if (String(postId) !== String(post.id) || !commentId) return
-      setComments((prev) => prev.filter((comment) => comment.id !== commentId))
+      if (!markCommentDeleted(commentId)) return
+      setLocalCommentsCount((count) => Math.max(count - 1, 0))
+      setComments((prev) => {
+        return prev.filter((comment) => comment.id !== commentId)
+      })
     }
 
     socket.on('new_comment', handleNewComment)
@@ -159,6 +177,7 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
       try {
         const data = await apiRequest('GET', `/posts/${post.id}/comments`)
         setComments(data)
+        setLocalCommentsCount(data.length)
         setCommentsLoaded(true)
       } catch (err) {
         // FIX: exibe erro ao usuário em vez de silenciar
@@ -213,6 +232,7 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
       const created = await apiRequest('POST', `/posts/${post.id}/comments`, fd)
       setComments((prev) => {
         if (prev.some((comment) => comment.id === created.id)) return prev
+        setLocalCommentsCount((count) => count + 1)
         return [...prev, created]
       })
       setNewText('')
@@ -228,7 +248,11 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
   const handleDelete = async (commentId) => {
     try {
       await apiRequest('DELETE', `/posts/${post.id}/comments/${commentId}`)
-      setComments((prev) => prev.filter((c) => c.id !== commentId))
+      if (!markCommentDeleted(commentId)) return
+      setLocalCommentsCount((count) => Math.max(count - 1, 0))
+      setComments((prev) => {
+        return prev.filter((c) => c.id !== commentId)
+      })
     } catch (err) {
       alert(err.message)
     }
@@ -369,7 +393,9 @@ export default function PostCard({ post, onLikeToggle, onPostDelete }) {
 
       {/* comments toggle label */}
       <button className="post-comments-toggle" onClick={toggleComments}>
-        {commentsOpen ? 'Ocultar comentários' : 'Ver comentários'}
+        {commentsOpen
+          ? `Ocultar comentários (${localCommentsCount})`
+          : `Ver comentários (${localCommentsCount})`}
       </button>
 
       {/* comments section */}

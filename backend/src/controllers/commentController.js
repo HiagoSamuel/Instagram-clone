@@ -230,5 +230,7 @@ exports.deleteComment = async (req, res) => {
 
   if (deleteError) return res.status(500).json({ error: deleteError.message })
 
+  await emitCommentEvent(req, 'comment_deleted', postId, { commentId }, userId)
+
   res.json({ message: 'Comentário excluído.' })
 }

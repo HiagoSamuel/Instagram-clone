@@ -177,8 +177,16 @@ async function enrichPostsForUser(posts = [], userId) {
       .in('post_id', postIds)
     : { data: [] }
 
+  const { data: allComments } = postIds.length
+    ? await supabase
+      .from('comments')
+      .select('post_id')
+      .in('post_id', postIds)
+    : { data: [] }
+
   const likesMap = {}
   const userLikedSet = new Set()
+  const commentsMap = {}
 
   for (const like of allLikes || []) {
     likesMap[like.post_id] = (likesMap[like.post_id] || 0) + 1
@@ -187,10 +195,15 @@ async function enrichPostsForUser(posts = [], userId) {
     }
   }
 
+  for (const comment of allComments || []) {
+    commentsMap[comment.post_id] = (commentsMap[comment.post_id] || 0) + 1
+  }
+
   return posts.map((post) => ({
     ...post,
     user: post.users || post.user,
     likes_count: likesMap[post.id] || 0,
+    comments_count: commentsMap[post.id] || 0,
     liked_by_me: userLikedSet.has(post.id),
   }))
 }
@@ -347,6 +360,7 @@ exports.createPost = async (req, res) => {
     ...post,
     user: user || { id: userId, username: '', avatar_url: null },
     likes_count: 0,
+    comments_count: 0,
     liked_by_me: false,
   }
 
@@ -417,29 +431,10 @@ exports.getUserPosts = async (req, res) => {
     return res.status(500).json({ error: 'Erro ao buscar posts' })
   }
 
-  // FIX: busca todas as curtidas de uma vez (evita N+1)
-  const postIds = posts.map((p) => p.id)
-
-  const { data: allLikes } = postIds.length
-    ? await supabase.from('likes').select('post_id, user_id').in('post_id', postIds)
-    : { data: [] }
-
-  const likesMap = {}
-  const userLikedSet = new Set()
-
-  for (const like of allLikes || []) {
-    likesMap[like.post_id] = (likesMap[like.post_id] || 0) + 1
-    if (like.user_id === userId) {
-      userLikedSet.add(like.post_id)
-    }
-  }
-
-  const postsWithLikes = posts.map((post) => ({
-    ...post,
-    user,
-    likes_count: likesMap[post.id] || 0,
-    liked_by_me: userLikedSet.has(post.id),
-  }))
+  const postsWithLikes = await enrichPostsForUser(
+    posts.map((post) => ({ ...post, user })),
+    userId
+  )
 
   // FIX: retorna objeto {user, posts} para compatibilidade com ProfilePage
   return res.json({ user, posts: postsWithLikes, can_view_posts: true })
