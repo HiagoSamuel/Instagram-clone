@@ -2,6 +2,12 @@ const path = require('path')
 const supabase = require('../services/supabase')
 const { getVisibleFeedUserIds } = require('./postController').discoveryHelpers
 
+function isMissingStoriesSchema(error) {
+  return error?.code === '42P01' ||
+    error?.code === 'PGRST205' ||
+    /stories|expires_at|media_url/i.test(error?.message || '')
+}
+
 function safeFileName(name) {
   const ext = path.extname(name || '').toLowerCase()
   const base = path.basename(name || 'story', ext)
@@ -84,24 +90,33 @@ exports.listStories = async (req, res) => {
     const visibleUserIds = await getVisibleFeedUserIds(userId)
     const { data, error } = await supabase
       .from('stories')
-      .select(`
-        id,
-        user_id,
-        media_url,
-        created_at,
-        expires_at,
-        users!stories_user_id_fkey (
-          id,
-          username,
-          avatar_url
-        )
-      `)
+      .select('id, user_id, media_url, created_at, expires_at')
       .in('user_id', visibleUserIds)
       .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false })
 
-    if (error) return res.status(500).json({ error: error.message })
-    return res.json(groupStories(data || []))
+    if (error) {
+      if (isMissingStoriesSchema(error)) return res.json([])
+      return res.status(500).json({ error: error.message })
+    }
+
+    const storyUserIds = [...new Set((data || []).map((story) => story.user_id))]
+    const { data: users, error: usersError } = storyUserIds.length
+      ? await supabase
+        .from('users')
+        .select('id, username, avatar_url')
+        .in('id', storyUserIds)
+      : { data: [], error: null }
+
+    if (usersError) return res.status(500).json({ error: usersError.message })
+
+    const usersById = new Map((users || []).map((user) => [user.id, user]))
+    const storiesWithUsers = (data || []).map((story) => ({
+      ...story,
+      users: usersById.get(story.user_id) || null,
+    }))
+
+    return res.json(groupStories(storiesWithUsers))
   } catch (error) {
     return res.status(500).json({ error: error.message || 'Erro ao listar stories.' })
   }
