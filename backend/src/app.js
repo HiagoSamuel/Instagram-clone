@@ -50,7 +50,10 @@ app.use('/api/stories', storyRoutes)
 app.use('/api', messageRoutes)
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' })
+  res.json({
+    status: 'ok',
+    features: ['stories', 'explore', 'notifications', 'messages'],
+  })
 })
 
 const server = http.createServer(app)
