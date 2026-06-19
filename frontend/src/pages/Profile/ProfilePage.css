@@ -380,9 +380,14 @@
 .profile-grid-post {
   position: relative;
   display: block;
+  width: 100%;
   aspect-ratio: 1;
   overflow: hidden;
+  padding: 0;
+  border: 0;
   background: var(--ig-bg-elev);
+  color: inherit;
+  cursor: pointer;
 }
 
 .profile-grid-post img,
@@ -418,6 +423,57 @@
 
 .profile-grid-post:hover .profile-grid-overlay {
   opacity: 1;
+}
+
+.profile-grid-post:focus-visible {
+  outline: 2px solid var(--ig-primary);
+  outline-offset: 2px;
+}
+
+.profile-post-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  background: rgba(0, 0, 0, 0.78);
+}
+
+.profile-post-modal {
+  position: relative;
+  width: min(100%, 720px);
+  max-height: calc(100vh - 56px);
+  overflow: auto;
+  background: var(--ig-bg);
+  border: 1px solid var(--ig-border);
+}
+
+.profile-post-modal .post-card {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.profile-post-modal-close {
+  position: fixed;
+  top: 18px;
+  right: 22px;
+  z-index: 1201;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 34px;
+  line-height: 1;
+}
+
+.profile-post-modal-close:hover {
+  opacity: 0.75;
 }
 
 .profile-private-state {

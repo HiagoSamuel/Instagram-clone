@@ -21,6 +21,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [friendshipStatus, setFriendshipStatus] = useState('none')
+  const [selectedPostId, setSelectedPostId] = useState(null)
 
   // modal state
   const [editOpen, setEditOpen] = useState(false)
@@ -60,6 +61,7 @@ export default function ProfilePage() {
   }, [username, currentUser?.username, friendshipStatus])
 
   const isOwnProfile = profile && currentUser && profile.id === currentUser.id
+  const selectedPost = posts.find((post) => post.id === selectedPostId)
 
   useEffect(() => {
     if (!socket || !profile?.id || !canViewPosts) return undefined
@@ -132,6 +134,9 @@ export default function ProfilePage() {
 
   const handlePostDelete = (postId) => {
     setPosts((current) => current.filter((post) => post.id !== postId))
+    if (selectedPostId === postId) {
+      setSelectedPostId(null)
+    }
   }
 
   const openEdit = () => {
@@ -232,7 +237,13 @@ export default function ProfilePage() {
         ) : (
           <div className="profile-feed-list">
             {posts.map((post) => (
-              <article key={post.id} className="profile-grid-post">
+              <button
+                key={post.id}
+                type="button"
+                className="profile-grid-post"
+                onClick={() => setSelectedPostId(post.id)}
+                aria-label={`Abrir post de ${profile.username}`}
+              >
                 {post.video_url ? (
                   <video src={post.video_url} poster={post.video_thumbnail_url || post.image_url} muted />
                 ) : post.image_url && post.image_url !== 'text-only-post' ? (
@@ -244,13 +255,36 @@ export default function ProfilePage() {
                   <span>{post.likes_count || 0} curtidas</span>
                   <span>{post.comments_count || 0} comentários</span>
                 </div>
-              </article>
+              </button>
             ))}
           </div>
         )}
       </section>
 
       {/* ── Edit modal ── */}
+      {selectedPost && (
+        <div
+          className="profile-post-modal-overlay"
+          onClick={(event) => event.target === event.currentTarget && setSelectedPostId(null)}
+        >
+          <div className="profile-post-modal" role="dialog" aria-modal="true" aria-label="Post aberto">
+            <button
+              type="button"
+              className="profile-post-modal-close"
+              onClick={() => setSelectedPostId(null)}
+              aria-label="Fechar post"
+            >
+              ×
+            </button>
+            <PostCard
+              post={selectedPost}
+              onLikeToggle={handleLikeToggle}
+              onPostDelete={handlePostDelete}
+            />
+          </div>
+        </div>
+      )}
+
       {editOpen && (
         <div className="edit-overlay" onClick={(e) => e.target === e.currentTarget && closeEdit()}>
           <div className="edit-modal">
