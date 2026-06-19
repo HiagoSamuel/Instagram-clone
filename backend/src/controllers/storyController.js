@@ -1,6 +1,6 @@
 const path = require('path')
 const supabase = require('../services/supabase')
-const { getVisibleFeedUserIds } = require('./postController')._private
+const { getVisibleFeedUserIds } = require('./postController').discoveryHelpers
 
 function safeFileName(name) {
   const ext = path.extname(name || '').toLowerCase()
