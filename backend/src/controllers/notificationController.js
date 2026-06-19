@@ -1,5 +1,12 @@
 const supabase = require('../services/supabase')
 
+function isMissingNotificationSchema(error) {
+  return error?.code === '42P01' ||
+    error?.code === 'PGRST205' ||
+    error?.code === 'PGRST204' ||
+    /notifications|actor_id|post_id|read|full_name/i.test(error?.message || '')
+}
+
 async function getUnreadTotal(userId) {
   const { count, error } = await supabase
     .from('notifications')
@@ -7,6 +14,7 @@ async function getUnreadTotal(userId) {
     .eq('user_id', userId)
     .eq('read', false)
 
+  if (error && isMissingNotificationSchema(error)) return 0
   if (error) throw error
   return count || 0
 }
@@ -31,18 +39,25 @@ exports.listNotifications = async (req, res) => {
     .order('created_at', { ascending: false })
     .limit(limit)
 
-  if (error) return res.status(500).json({ error: error.message })
+  if (error) {
+    if (isMissingNotificationSchema(error)) return res.json([])
+    return res.status(500).json({ error: error.message })
+  }
 
   const actorIds = [...new Set((notifications || []).map((item) => item.actor_id))]
   const postIds = [...new Set((notifications || []).map((item) => item.post_id).filter(Boolean))]
 
-  const { data: actors } = actorIds.length
-    ? await supabase.from('users').select('id, username, full_name, avatar_url').in('id', actorIds)
+  const { data: actors, error: actorsError } = actorIds.length
+    ? await supabase.from('users').select('id, username, avatar_url').in('id', actorIds)
     : { data: [] }
 
-  const { data: posts } = postIds.length
+  if (actorsError) return res.status(500).json({ error: actorsError.message })
+
+  const { data: posts, error: postsError } = postIds.length
     ? await supabase.from('posts').select('id, caption').in('id', postIds)
     : { data: [] }
+
+  if (postsError) return res.status(500).json({ error: postsError.message })
 
   const actorsById = new Map((actors || []).map((actor) => [actor.id, actor]))
   const postsById = new Map((posts || []).map((post) => [post.id, post]))
@@ -64,7 +79,10 @@ exports.markNotificationRead = async (req, res) => {
     .eq('id', id)
     .eq('user_id', userId)
 
-  if (error) return res.status(500).json({ error: error.message })
+  if (error) {
+    if (isMissingNotificationSchema(error)) return res.json({ unread_count: 0 })
+    return res.status(500).json({ error: error.message })
+  }
 
   try {
     const unreadCount = await getUnreadTotal(userId)
@@ -83,6 +101,9 @@ exports.markAllNotificationsRead = async (req, res) => {
     .eq('user_id', userId)
     .eq('read', false)
 
-  if (error) return res.status(500).json({ error: error.message })
+  if (error) {
+    if (isMissingNotificationSchema(error)) return res.json({ unread_count: 0 })
+    return res.status(500).json({ error: error.message })
+  }
   return res.json({ unread_count: 0 })
 }
